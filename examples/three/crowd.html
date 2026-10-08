@@ -1,0 +1,85 @@
+<!doctype html>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Wireface three.js: a crowd</title>
+<link rel="stylesheet" href="example.css">
+<script type="importmap">
+{ "imports": {
+  "three": "../../node_modules/three/build/three.module.js",
+  "three/addons/": "../../node_modules/three/examples/jsm/",
+  "@wireface/sdk": "../../dist/wireface.js",
+  "@wireface/sdk/2d": "../../dist/2d.js",
+  "@wireface/sdk/2d/live": "../../dist/2d-live.js",
+  "@wireface/sdk/three": "../../dist/three.js",
+  "@wireface/sdk/three/characters": "../../dist/three-characters.js",
+  "@wireface/sdk/three/kit": "../../dist/three-kit.js"
+} }
+</script>
+<canvas></canvas>
+<aside>
+  <a class="back" href="./">&larr; examples</a>
+  <h1>A crowd</h1>
+  <p>Every FaceMesh is ordinary geometry in your one renderer, so there's no limit of WebGL contexts: here are
+    <b id="count">24</b> of them, each with its own rig, animator and timeline. Every face costs a little CPU a frame
+    (its 468 vertices posed) and a few draw calls.</p>
+  <div class="row"><button id="talk">Everyone talk</button><button id="look">Look at me</button><button id="more">Add 12 more</button></div>
+  <p id="fps"></p>
+  <pre>for (let i = 0; i &lt; 24; i++) {
+  const face = new FaceMesh({ skin: SKINS[i % 11], size: 0.16 });
+  face.position.set(x, y, z);          // rows of eight, up and back
+  scene.add(face);
+}
+// one clip, mimed by all (no audioContext: silent)
+faces.forEach(f => f.say(clip));</pre>
+</aside>
+<script type="module">
+  import * as THREE from 'three';
+  import { FaceMesh, catalogue, ASSETS, voices } from '@wireface/sdk/three';
+  import { hairCap, clay } from '@wireface/sdk/three/kit';
+  import { stage } from './stage.js';
+
+  const { scene, camera, onFrame } = stage({ camera: [0, 1.65, 4.4], target: [0, 1.1, -0.5], width: 3.2 });
+  const skins = (await catalogue(ASSETS)).map(s => s.id);
+  const looks = [...skins.map(skin => ({ skin })), { style: 'toon', colors: { skin: '#8fd694' } }, { style: 'hologram', preset: 'violet' }, { style: 'sculpt', colors: { skin: '#e0ac8a' } }];
+  const hair = ['#1d1512', '#3b2416', '#7a5a3a', '#c9c6c0', '#0c0b10'].map(c => clay(c, { roughness: 0.55 }));
+  const faces = [];
+
+  function add(n) {
+    for (let k = 0; k < n; k++) {
+      const i = faces.length, row = Math.floor(i / 8), col = i % 8;
+      const x = (col - 3.5) * 0.36 + (row % 2) * 0.12;
+      const look = looks[i % looks.length];
+      const face = new FaceMesh({ size: 0.16, ...look });
+      face.position.set(x, 0.7 + row * 0.3, -row * 0.42 - x * x * 0.12);
+      face.lookAt(0, face.position.y, 5);          // Object3D.lookAt: turn the head to face the front
+      if (look.skin && look.skin !== 'robot') hairCap(face, hair[i % hair.length], { front: 0.2 });
+      scene.add(face);
+      faces.push(face);
+    }
+    document.querySelector('#count').textContent = faces.length;
+  }
+  add(24);
+
+  document.querySelector('#talk').onclick = async () => {
+    const clip = await faces[0].clip('marcus', voices('3d'));
+    faces.forEach((f, i) => setTimeout(() => { f.express('excited', 3); f.say(clip); }, i * 120));
+  };
+  let looking = false;
+  document.querySelector('#look').onclick = e => {
+    looking = !looking;
+    e.target.classList.toggle('on', looking);
+    faces.forEach(f => f.gazeAt(looking ? camera : null));
+  };
+  document.querySelector('#more').onclick = () => { add(12); if (looking) faces.forEach(f => f.gazeAt(camera)); };
+
+  let frames = 0, since = performance.now();
+  onFrame(() => {
+    frames++;
+    const now = performance.now();
+    if (now - since > 1000) {
+      document.querySelector('#fps').textContent = `${Math.round(frames * 1000 / (now - since))} frames a second with ${faces.length} faces`;
+      frames = 0;
+      since = now;
+    }
+  });
+</script>

@@ -1,0 +1,49 @@
+<!doctype html>
+<html lang="en">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Wireface: config</title>
+<link rel="icon" href="../../assets/brand/mark.svg" type="image/svg+xml">
+<link rel="stylesheet" href="example.css">
+<canvas></canvas>
+<aside>
+  <h1>Config files</h1>
+  <p>A face's look is a small JSON file (<code>config/face.schema.json</code> describes every setting). Load one of the
+    examples, or edit the JSON and apply it: anything invalid is named.</p>
+  <select id="pick"></select>
+  <textarea id="json" rows="14" style="width:100%; font: 13px ui-monospace, Consolas, monospace; background:#050916; color:#e6ecf8; border:1px solid rgba(148,163,184,.18); border-radius:8px; padding:10px"></textarea>
+  <div class="row"><button id="apply">Apply</button></div>
+  <p id="status"></p>
+  <p><a href="./">All examples</a></p>
+</aside>
+<script type="module">
+  import { createFace, validateConfig } from '../../dist/wireface.js';
+
+  const face = createFace(document.querySelector('canvas'));
+  const files = ['hologram-cyan', 'ember-sculpt', 'violet-points', 'dracula', 'robot', 'mei-half'];
+  const pick = document.getElementById('pick'), box = document.getElementById('json'), status = document.getElementById('status');
+  for (const f of files) pick.append(new Option(f, f));
+
+  async function apply(text) {
+    try {
+      const file = JSON.parse(text);
+      const config = validateConfig(file);                   // throws ConfigError naming the setting
+      face.config = validateConfig({ ...config, skin: null }); // from the defaults each time, then the skin with a sweep
+      face.set({});
+      const teeth = Object.hasOwn(file, 'teeth_style') ? config.teeth_style : undefined;   // else the skin's own
+      await face.useSkin(config.skin, { sweep: config.skin ? 1.2 : 0, teeth });
+      status.textContent = 'Applied.';
+      status.className = '';
+    } catch (err) {
+      status.textContent = err.message;
+      status.className = 'error';
+    }
+  }
+  async function load(name) {
+    box.value = await (await fetch(`./config/${name}.json`)).text();
+    apply(box.value);
+  }
+  pick.onchange = () => load(pick.value);
+  document.getElementById('apply').onclick = () => apply(box.value);
+  load(files[0]);
+</script>

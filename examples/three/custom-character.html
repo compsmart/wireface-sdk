@@ -1,0 +1,118 @@
+<!doctype html>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Wireface three.js: build your own character</title>
+<link rel="stylesheet" href="example.css">
+<script type="importmap">
+{ "imports": {
+  "three": "../../node_modules/three/build/three.module.js",
+  "three/addons/": "../../node_modules/three/examples/jsm/",
+  "@wireface/sdk": "../../dist/wireface.js",
+  "@wireface/sdk/2d": "../../dist/2d.js",
+  "@wireface/sdk/2d/live": "../../dist/2d-live.js",
+  "@wireface/sdk/three": "../../dist/three.js",
+  "@wireface/sdk/three/characters": "../../dist/three-characters.js",
+  "@wireface/sdk/three/kit": "../../dist/three-kit.js"
+} }
+</script>
+<canvas></canvas>
+<aside>
+  <a class="back" href="./">&larr; examples</a>
+  <h1>Build your own character</h1>
+  <p>A snowman, from three.js primitives and a FaceMesh. The face brings the head: its size, its skull and its colour.
+    <code>face.bounds</code> says where the eyes, brow, ears and the top of the head are, so the hat, the scarf and the
+    coal can be put in the right places; anything added to <code>face.head</code> moves with it.</p>
+  <div class="row"><button id="talk">Talk</button><button id="cold">Shiver</button></div>
+  <div class="caption" id="caption"></div>
+  <pre id="code">const face = new FaceMesh({ style: 'sculpt', size: 0.26,
+  colors: { skin: '#f4f8ff', lips: '#7d8fb3', iris: '#1e293b' } });
+attachFace(head, face);           // head: a Group on the body
+const { skull } = face.bounds;    // also eyes, ears, brow, nose, mouth, chin...
+hat.position.set(0, skull.center.y + skull.radius.y * 0.8, skull.center.z);
+face.head.add(hat);               // moves with every nod
+body.material = face.skinMaterial();   // the face's own colour</pre>
+</aside>
+<script type="module">
+  import * as THREE from 'three';
+  import { FaceMesh, attachFace, defineExpression, unlockAudio, voices } from '@wireface/sdk/three';
+  import { stage } from './stage.js';
+
+  const { scene, camera, onFrame } = stage({ camera: [0.5, 1.25, 3.3], target: [0, 0.8, 0], width: 1.2, background: '#0d1526' });
+
+  // the face first: it decides how big the head is, and what colour snow is
+  const face = new FaceMesh({ style: 'sculpt', size: 0.26, colors: { skin: '#f4f8ff', lips: '#7d8fb3', iris: '#1e293b', mouth: '#1e1b4b' } });
+  const snow = face.skinMaterial({ roughness: 0.9 });
+
+  // two snowballs for a body, and a head group on top for the face
+  const body = new THREE.Group();
+  scene.add(body);
+  for (const [r, y] of [[0.36, 0.33], [0.26, 0.82]]) {
+    const ball = new THREE.Mesh(new THREE.SphereGeometry(r, 48, 32), snow);
+    ball.position.y = y;
+    ball.castShadow = ball.receiveShadow = true;
+    body.add(ball);
+  }
+  const head = new THREE.Group();
+  head.position.y = 1.06;
+  body.add(head);
+  attachFace(head, face, { at: [0, 0.16, 0] });
+  face.gazeAt(camera);
+
+  // where things go on the head
+  const { skull } = face.bounds;
+  const coal = new THREE.MeshStandardMaterial({ color: '#16161a', roughness: 0.8 });
+  // a top hat on the crown
+  const hat = new THREE.Group();
+  hat.position.set(0, skull.center.y + skull.radius.y * 0.78, skull.center.z - 0.01);
+  hat.rotation.set(-0.12, 0, 0.12);
+  const brim = new THREE.Mesh(new THREE.CylinderGeometry(0.2, 0.2, 0.014, 40), coal);
+  const crown = new THREE.Mesh(new THREE.CylinderGeometry(0.115, 0.12, 0.2, 40), coal);
+  crown.position.y = 0.1;
+  const band = new THREE.Mesh(new THREE.CylinderGeometry(0.122, 0.122, 0.035, 40, 1, true), new THREE.MeshStandardMaterial({ color: '#b91c1c' }));
+  band.position.y = 0.03;
+  hat.add(brim, crown, band);
+  hat.traverse(o => { o.castShadow = true; });
+  face.head.add(hat);
+  // a scarf round the neck
+  const scarf = new THREE.Mesh(new THREE.TorusGeometry(0.17, 0.045, 14, 40), new THREE.MeshStandardMaterial({ color: '#dc2626', roughness: 0.9 }));
+  scarf.rotation.x = Math.PI / 2;
+  scarf.position.y = 1.02;
+  body.add(scarf);
+  const tail = new THREE.Mesh(new THREE.BoxGeometry(0.07, 0.24, 0.025), scarf.material);
+  tail.position.set(0.1, 0.9, 0.14);
+  tail.rotation.set(0.25, 0, 0.2);
+  body.add(tail);
+  // coal buttons, and stick arms
+  for (let i = 0; i < 3; i++) {
+    const b = new THREE.Mesh(new THREE.SphereGeometry(0.022, 12, 8), coal);
+    b.position.set(0, 0.62 + i * 0.09, Math.sqrt(0.26 ** 2 - (0.62 + i * 0.09 - 0.82) ** 2) + 0.005);
+    body.add(b);
+  }
+  const wood = new THREE.MeshStandardMaterial({ color: '#5a3b22', roughness: 0.8 });
+  const arms = [-1, 1].map(s => {
+    const arm = new THREE.Group();
+    arm.position.set(s * 0.22, 0.86, 0);
+    const stick = new THREE.Mesh(new THREE.CylinderGeometry(0.012, 0.016, 0.42), wood);
+    stick.position.set(s * 0.18, 0.08, 0);
+    stick.rotation.z = -s * 1.1;
+    arm.add(stick);
+    body.add(arm);
+    return arm;
+  });
+
+  // a shiver of its own: defineExpression, then express it
+  defineExpression('brrr', { squintL: 0.5, squintR: 0.5, frown: 0.4, close: 0.6, browInner: 0.7, browDown: 0.2 });
+  let shiver = 0;
+  document.querySelector('#cold').onclick = () => { face.express('brrr', 2.5); shiver = 2.5; };
+  onFrame((dt, t) => {
+    shiver = Math.max(0, shiver - dt);
+    body.rotation.z = shiver ? Math.sin(t * 60) * 0.012 : 0;
+    arms.forEach((a, i) => { a.rotation.z = (i ? -1 : 1) * (0.1 + face.level * 0.4 * Math.sin(t * 6 + i)); });
+  });
+
+  const caption = document.querySelector('#caption');
+  document.querySelector('#talk').onclick = async () => {
+    const audioContext = unlockAudio();             // on the click itself, before anything is awaited
+    await face.say(await face.clip('walter', voices('3d')), { audioContext, onCaption: t => (caption.textContent = t) });
+  };
+</script>

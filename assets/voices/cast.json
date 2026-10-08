@@ -1,0 +1,110 @@
+[
+ {
+  "id": "mei",
+  "name": "Mei",
+  "teeth": "normal",
+  "cues": [
+   [
+    0,
+    "happy"
+   ]
+  ]
+ },
+ {
+  "id": "robot",
+  "name": "Robot",
+  "teeth": "braces",
+  "cues": [
+   [
+    0,
+    "calm"
+   ],
+   [
+    2.2,
+    "amused"
+   ]
+  ]
+ },
+ {
+  "id": "marcus",
+  "name": "Marcus",
+  "teeth": "normal",
+  "cues": [
+   [
+    0,
+    "excited"
+   ]
+  ]
+ },
+ {
+  "id": "amara",
+  "name": "Amara",
+  "teeth": "normal",
+  "cues": [
+   [
+    0,
+    "calm"
+   ],
+   [
+    2.2,
+    "curious"
+   ]
+  ]
+ },
+ {
+  "id": "monster",
+  "name": "Monster",
+  "teeth": "sharp",
+  "cues": [
+   [
+    0,
+    "frustrated"
+   ],
+   [
+    5.6,
+    "amused"
+   ]
+  ]
+ },
+ {
+  "id": "lucia",
+  "name": "Lucia",
+  "teeth": "normal",
+  "cues": [
+   [
+    0,
+    "happy"
+   ]
+  ]
+ },
+ {
+  "id": "dracula",
+  "name": "Dracula",
+  "teeth": "vampire",
+  "cues": [
+   [
+    0,
+    "calm"
+   ],
+   [
+    8.4,
+    "amused"
+   ]
+  ]
+ },
+ {
+  "id": "walter",
+  "name": "Walter",
+  "teeth": "normal",
+  "cues": [
+   [
+    0,
+    "calm"
+   ],
+   [
+    2.0,
+    "happy"
+   ]
+  ]
+ }
+]

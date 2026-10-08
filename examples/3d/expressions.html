@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="en">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Wireface: expressions</title>
+<link rel="icon" href="../../assets/brand/mark.svg" type="image/svg+xml">
+<link rel="stylesheet" href="example.css">
+<canvas></canvas>
+<aside>
+  <h1>Expressions</h1>
+  <p>An expression is a set of weights over the face's channels, eased in and held. The ones below are built in;
+    <b>wink</b> and <b>smug</b> are defined on this page with <code>defineExpression</code>.</p>
+  <div class="row" id="moods"></div>
+  <p>Standing mood (worn when nothing else is showing):</p>
+  <select id="mood"><option value="">none</option></select>
+  <p>State:</p>
+  <div class="row" id="states"></div>
+  <pre id="code"></pre>
+  <p><a href="./">All examples</a></p>
+</aside>
+<script type="module">
+  import { createFace, defineExpression, MOODS } from '../../dist/wireface.js';
+
+  const face = createFace(document.querySelector('canvas'));
+  await face.useSkin('amara');
+
+  // your own expressions: any of CHANNELS, each 0..1
+  defineExpression('wink', { blinkL: 1, smileL: 0.35, smileR: 0.55, browUpR: 0.25, squintL: 0.3 });
+  defineExpression('smug', { smileR: 0.6, browDown: 0.2, squintL: 0.25, squintR: 0.15, browUpR: 0.3 });
+
+  const add = (parent, label, fn) => {
+    const b = document.createElement('button');
+    b.textContent = label;
+    b.onclick = fn;
+    parent.append(b);
+  };
+  for (const name of [...MOODS.filter(m => m !== 'neutral'), 'wink', 'smug']) add(document.getElementById('moods'), name, () => face.express(name, 3));
+  for (const name of MOODS) document.getElementById('mood').append(new Option(name, name));
+  document.getElementById('mood').onchange = e => face.mood(e.target.value || null, 0.7);
+  for (const s of ['idle', 'thinking', 'busy', 'error', 'muted', 'asleep']) add(document.getElementById('states'), s, () => face.state(s));
+  document.getElementById('code').textContent =
+    "defineExpression('wink', { blinkL: 1, smileL: 0.35, smileR: 0.55, browUpR: 0.25, squintL: 0.3 });\nface.express('wink', 3);";
+</script>

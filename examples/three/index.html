@@ -1,0 +1,46 @@
+<!doctype html>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Wireface SDK: three.js examples</title>
+<link rel="stylesheet" href="example.css">
+<style>
+  body { display: block; max-width: 860px; margin: 0 auto; padding: 32px 20px 60px; height: auto; }
+  h1 { font-size: 26px; } h2 { font-size: 15px; margin-top: 26px; color: var(--text); }
+  ul { list-style: none; padding: 0; margin: 10px 0 0; display: grid; gap: 8px; }
+  li a { display: block; padding: 12px 14px; border: 1px solid var(--line); border-radius: 10px; background: var(--panel); color: var(--text); text-decoration: none; }
+  li a:hover { border-color: var(--accent); }
+  li b { color: var(--accent); font-weight: 600; } li span { color: var(--muted); font-size: 14px; display: block; margin-top: 2px; }
+  .lead { font-size: 15px; margin-top: 8px; }
+</style>
+<h1>Wireface SDK: three.js examples</h1>
+<p class="lead">One small page per idea: each shows a few lines of face code inside an ordinary three.js scene. View
+  the source of any page; <code>stage.js</code> is the shared three.js set-up (renderer, lights, orbit controls), and
+  <code>hello.html</code> does it all by hand. The whole cast is on one stage in <a href="https://wireface.dev/threejs/demo/">the demo</a>.</p>
+
+<h2>Getting started</h2>
+<ul>
+  <li><a href="hello.html"><b>Hello</b><span>The smallest page: a body, a head group, and a FaceMesh with Mei's skin that blinks, looks at you and talks.</span></a></li>
+  <li><a href="custom-character.html"><b>Build your own character</b><span>A snowman from primitives: <code>face.bounds</code> places the hat; <code>face.skinMaterial()</code> makes the snow match the face.</span></a></li>
+  <li><a href="attach-to-gltf.html"><b>A face on a glTF model</b><span><code>findBone()</code> and <code>attachFace()</code> on a rigged, animated model: it waves, dances and talks at once.</span></a></li>
+</ul>
+
+<h2>What faces do</h2>
+<ul>
+  <li><a href="expressions.html"><b>Expressions</b><span>Every mood, standing moods, states, and your own expressions from the rig's channels.</span></a></li>
+  <li><a href="look-at.html"><b>Looking at things</b><span><code>gazeAt()</code> anything in the world: an orb, your pointer, the camera, each other. Eyes first, then the head.</span></a></li>
+  <li><a href="styles.html"><b>Styles</b><span>Photo, sculpt, toon and hologram on the same lights; colour presets, the wireframe-to-skin cross-fade, sweeps and vanishing.</span></a></li>
+  <li><a href="conversation.html"><b>Two characters talking</b><span>Turn-taking with recorded, lip-synced lines: the listener watches the speaker and reacts.</span></a></li>
+  <li><a href="mic.html"><b>Lip sync from a microphone</b><span><code>listenTo()</code>: a robot that says what you say, live.</span></a></li>
+  <li><a href="live-chat.html"><b>Talk with a character</b><span>A Gemini Live conversation through Wireface 2D's <code>Conversation</code>, on a three.js character. Needs a key on the dev server.</span></a></li>
+</ul>
+
+<h2>Faces as textures (FaceScreen)</h2>
+<ul>
+  <li><a href="screen-face.html"><b>A face on a screen</b><span>Wireface core's own renderer (the hologram with its bloom, or a skin) on a monitor's curved screen.</span></a></li>
+  <li><a href="talking-portrait.html"><b>A talking portrait</b><span>Wireface 2D makes a painting talk, in a gilt frame on the wall, and its eyes follow you. Thirteen art styles.</span></a></li>
+</ul>
+
+<h2>Scale</h2>
+<ul>
+  <li><a href="crowd.html"><b>A crowd</b><span>Two dozen FaceMesh heads (and more on a click) in one renderer, with a frame rate.</span></a></li>
+</ul>

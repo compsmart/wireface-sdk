@@ -1,0 +1,68 @@
+[
+ {
+  "id": "mei",
+  "name": "Mei",
+  "kind": "human",
+  "teeth": "normal"
+ },
+ {
+  "id": "marcus",
+  "name": "Marcus",
+  "kind": "human",
+  "teeth": "normal"
+ },
+ {
+  "id": "amara",
+  "name": "Amara",
+  "kind": "human",
+  "teeth": "normal"
+ },
+ {
+  "id": "walter",
+  "name": "Walter",
+  "kind": "human",
+  "teeth": "normal"
+ },
+ {
+  "id": "lucia",
+  "name": "Lucia",
+  "kind": "human",
+  "teeth": "normal"
+ },
+ {
+  "id": "arjun",
+  "name": "Arjun",
+  "kind": "human",
+  "teeth": "normal"
+ },
+ {
+  "id": "omar",
+  "name": "Omar",
+  "kind": "human",
+  "teeth": "normal"
+ },
+ {
+  "id": "ruth",
+  "name": "Ruth",
+  "kind": "human",
+  "teeth": "normal"
+ },
+ {
+  "id": "robot",
+  "name": "Robot",
+  "kind": "robot",
+  "teeth": "braces"
+ },
+ {
+  "id": "monster",
+  "name": "Monster",
+  "kind": "creature",
+  "teeth": "sharp"
+ },
+ {
+  "id": "dracula",
+  "name": "Dracula",
+  "kind": "creature",
+  "teeth": "vampire"
+ }
+]

@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="en">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Wireface 2D: config</title>
+<link rel="icon" href="../../assets/brand/mark.svg" type="image/svg+xml">
+<link rel="stylesheet" href="example.css">
+<div class="stage"><canvas></canvas></div>
+<aside>
+  <h1>Config files</h1>
+  <p>Every setting can live in a JSON file (see <a href="../../face2d.schema.json">the schema</a>). Load an example, edit it, apply it: anything invalid is named.</p>
+  <select id="pick" aria-label="An example config"><option value="">An example...</option></select>
+  <textarea id="text" rows="12" aria-label="Config file (JSON)" spellcheck="false"></textarea>
+  <div class="row"><button id="apply">Apply</button></div>
+  <p id="error" class="error"></p>
+</aside>
+<script type="module">
+  import { createFace2d, validateConfig, DEFAULTS } from '../../dist/2d.js';
+
+  const face = createFace2d(document.querySelector('canvas'));
+  await face.useCharacter('ava', { transition: 0 });
+  const text = document.getElementById('text');
+  for (const name of ['anime-flat', 'portrait-3d', 'pixel-vampire', 'still-and-calm']) document.getElementById('pick').append(new Option(name, name));
+  document.getElementById('pick').onchange = async e => {
+    if (!e.target.value) return;
+    const r = await fetch(`./config/${e.target.value}.json`);
+    if (r.ok) text.value = await r.text();
+    else document.getElementById('error').textContent = `Couldn't load that example (${r.status}).`;
+  };
+  document.getElementById('apply').onclick = async () => {
+    const error = document.getElementById('error');
+    error.textContent = '';
+    try {
+      const config = JSON.parse(text.value);
+      validateConfig(config);                                     // throws ConfigError naming the setting
+      const { character, ...look } = config;
+      face.set({ ...DEFAULTS, ...look, character: face.config.character });   // each file starts from the defaults
+      if (character) await face.useCharacter(character);
+    } catch (e) {
+      error.textContent = e.message;
+    }
+  };
+</script>

@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="en">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Wireface 2D: characters</title>
+<link rel="icon" href="../../assets/brand/mark.svg" type="image/svg+xml">
+<link rel="stylesheet" href="example.css">
+<div class="stage"><canvas></canvas></div>
+<aside>
+  <h1>Characters</h1>
+  <p>The built-in characters, one per art style. Each one's face was found ahead of time (<code>npm run bake</code>), so wearing one needs no API call.</p>
+  <div class="thumbs" id="thumbs"></div>
+  <pre id="code"></pre>
+</aside>
+<script type="module">
+  import { createFace2d } from '../../dist/2d.js';
+
+  const face = createFace2d(document.querySelector('canvas'), { config: { framing: 'face' } });
+  const thumbs = document.getElementById('thumbs');
+  for (const c of await face.catalogue()) {
+    const b = document.createElement('button');
+    b.title = `${c.name}: ${c.styleLabel}`;
+    b.innerHTML = `<img src="${c.thumb}" alt="">`;
+    b.onclick = async () => {
+      document.getElementById('code').textContent = `await face.useCharacter('${c.id}');   // ${c.styleLabel}`;
+      for (const x of thumbs.children) x.classList.toggle('on', x === b);
+      await face.useCharacter(c.id, { transition: 0.9 });      // the old one burns away, the new one burns in
+      face.express('happy', 2.5);
+    };
+    thumbs.append(b);
+  }
+  thumbs.children[0].click();
+</script>

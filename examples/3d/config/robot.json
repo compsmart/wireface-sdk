@@ -1,0 +1,7 @@
+{
+  "$schema": "../face.schema.json",
+  "skin": "robot",
+  "teeth_style": "braces",
+  "preset": "ice",
+  "expressiveness": 0.6
+}

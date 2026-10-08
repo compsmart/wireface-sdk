@@ -1,0 +1,105 @@
+<!doctype html>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Wireface three.js: a face on a screen</title>
+<link rel="stylesheet" href="example.css">
+<script type="importmap">
+{ "imports": {
+  "three": "../../node_modules/three/build/three.module.js",
+  "three/addons/": "../../node_modules/three/examples/jsm/",
+  "@wireface/sdk": "../../dist/wireface.js",
+  "@wireface/sdk/2d": "../../dist/2d.js",
+  "@wireface/sdk/2d/live": "../../dist/2d-live.js",
+  "@wireface/sdk/three": "../../dist/three.js",
+  "@wireface/sdk/three/characters": "../../dist/three-characters.js",
+  "@wireface/sdk/three/kit": "../../dist/three-kit.js"
+} }
+</script>
+<canvas></canvas>
+<aside>
+  <a class="back" href="./">&larr; examples</a>
+  <h1>A face on a screen</h1>
+  <p>A <code>FaceScreen</code>: Wireface core's own renderer draws the face (its glowing wireframe, bloom and all) on a
+    hidden canvas, and that canvas is the texture of a monitor's screen. Turn the monitor and the face follows you.</p>
+  <h2>Colours</h2>
+  <div class="row" id="presets"></div>
+  <h2>Skins</h2>
+  <div class="row" id="skins"></div>
+  <label class="slider">Wireframe <input id="amount" type="range" min="0" max="1" step="0.01" value="0"> Skin</label>
+  <div class="row"><button id="talk">Talk</button><button id="think">Think</button></div>
+  <div class="caption" id="caption"></div>
+  <pre>const screen = new FaceScreen({ engine: '3d',
+  config: { preset: 'cyan', skin_amount: 0 } });
+const glass = new THREE.Mesh(
+  screenGeometry({ width: 0.64, height: 0.48, curve: 0.02 }),
+  screen.material({ corner: 0.04 }));
+monitor.add(screen.bind(glass));   // drawn as it's drawn
+screen.gazeAt(camera);</pre>
+</aside>
+<script type="module">
+  import * as THREE from 'three';
+  import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.js';
+  import { FaceScreen, PRESETS, screenGeometry, unlockAudio, voices } from '@wireface/sdk/three';
+  import { stage } from './stage.js';
+
+  const { scene, camera, onFrame } = stage({ camera: [0.5, 1.15, 1.9], target: [0, 1.02, 0], width: 0.9 });
+
+  // a monitor on a desk
+  const plastic = new THREE.MeshStandardMaterial({ color: '#d9dde4', roughness: 0.45 });
+  const desk = new THREE.Mesh(new RoundedBoxGeometry(1.6, 0.06, 0.8, 4, 0.02), new THREE.MeshStandardMaterial({ color: '#5b4636', roughness: 0.6 }));
+  desk.position.y = 0.72;
+  desk.receiveShadow = desk.castShadow = true;
+  scene.add(desk);
+  const monitor = new THREE.Group();
+  monitor.position.set(0, 1.04, 0);
+  scene.add(monitor);
+  const shell = new THREE.Mesh(new RoundedBoxGeometry(0.72, 0.56, 0.08, 4, 0.03), plastic);
+  shell.castShadow = true;
+  monitor.add(shell);
+  const stand = new THREE.Mesh(new THREE.CylinderGeometry(0.03, 0.03, 0.26), plastic);
+  stand.position.set(0, 0.87, -0.02);
+  scene.add(stand);
+
+  // the face: core's renderer on a hidden canvas, shown on the screen
+  const screen = new FaceScreen({ engine: '3d', resolution: 512, fit: 1.1, config: { preset: 'cyan', skin_amount: 0, glow: 1 } });
+  const glass = new THREE.Mesh(screenGeometry({ width: 0.64, height: 0.48, curve: 0.02 }), screen.material({ corner: 0.04 }));
+  glass.position.z = 0.042;
+  monitor.add(screen.bind(glass));
+  screen.gazeAt(camera);
+
+  // the monitor turns a little towards the camera
+  onFrame((dt, t) => {
+    const want = Math.atan2(camera.position.x - monitor.position.x, camera.position.z - monitor.position.z) * 0.5;
+    monitor.rotation.y += (want - monitor.rotation.y) * Math.min(1, dt * 2);
+  });
+
+  for (const [name, p] of Object.entries(PRESETS)) {
+    const b = document.createElement('button');
+    b.textContent = name;
+    b.style.borderColor = p.primary;
+    b.onclick = () => screen.set({ preset: name });
+    document.querySelector('#presets').append(b);
+  }
+  for (const id of ['mei', 'robot', 'dracula', 'walter']) {
+    const b = document.createElement('button');
+    b.textContent = id;
+    b.onclick = async () => {
+      screen.set({ skin_amount: 1 });
+      document.querySelector('#amount').value = 1;
+      await screen.useSkin(id, { sweep: 1.4 });
+    };
+    document.querySelector('#skins').append(b);
+  }
+  document.querySelector('#amount').oninput = e => screen.set({ skin_amount: +e.target.value });
+  document.querySelector('#think').onclick = e => {
+    const on = !e.target.classList.contains('on');
+    e.target.classList.toggle('on', on);
+    screen.state(on ? 'thinking' : 'idle');
+    screen.spinner(on);
+  };
+  const caption = document.querySelector('#caption');
+  document.querySelector('#talk').onclick = async () => {
+    const audioContext = unlockAudio();             // on the click itself, before anything is awaited
+    await screen.say(await screen.clip('marcus', voices('3d')), { audioContext, onCaption: t => (caption.textContent = t) });
+  };
+</script>

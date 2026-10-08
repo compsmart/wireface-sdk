@@ -1,0 +1,44 @@
+/* Shared look of the examples: a canvas on the left, a few controls on the right. */
+:root { color-scheme: dark; --bg: #060b18; --panel: #0d1630; --line: rgba(148, 163, 184, .18); --text: #e6ecf8; --muted: #9aa6c3; --accent: #22d3ee; }
+* { box-sizing: border-box; }
+html, body { margin: 0; height: 100%; background: var(--bg); color: var(--text); font: 15px/1.5 system-ui, "Segoe UI", sans-serif; }
+body { display: grid; grid-template-columns: 1fr minmax(260px, 340px); }
+canvas { display: block; width: 100%; height: 100%; min-height: 320px; }
+aside { padding: 20px; border-left: 1px solid var(--line); background: var(--panel); overflow: auto; display: grid; gap: 14px; align-content: start; }
+h1 { font-size: 18px; margin: 0; } p { margin: 0; color: var(--muted); font-size: 14px; }
+button, select, input, input[type=file] { font: inherit; color: var(--text); background: #121c3d; border: 1px solid var(--line); border-radius: 8px; padding: 7px 11px; cursor: pointer; }
+button:hover { border-color: var(--accent); }
+button:disabled { opacity: .5; cursor: default; border-color: var(--line); }
+button.on { border-color: var(--accent); background: rgba(34, 211, 238, .14); }
+.row { display: flex; flex-wrap: wrap; gap: 6px; }
+.caption { min-height: 3em; padding: 10px 12px; border-radius: 10px; border: 1px solid var(--line); background: #0a1226; }
+code, pre { font: 13px ui-monospace, Consolas, monospace; }
+pre { margin: 0; padding: 10px; border-radius: 8px; background: #050916; border: 1px solid var(--line); white-space: pre-wrap; overflow-wrap: anywhere; max-height: 260px; overflow: auto; }
+pre:empty { display: none; }
+a { color: var(--accent); }
+.thumbs { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; }
+.thumbs button { padding: 0; overflow: hidden; aspect-ratio: 1; }
+.thumbs img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.thumbs button.on { outline: 2px solid var(--accent); outline-offset: 1px; }
+.blend { display: flex; align-items: center; gap: 10px; color: var(--muted); font-size: 14px; }
+.blend input { flex: 1; accent-color: var(--accent); }
+.error { color: #fca5a5; }
+.stage { position: relative; min-height: 320px; }
+.stage canvas { position: absolute; inset: 0; }
+.stage .hint { position: absolute; inset: 0; display: grid; place-items: center; padding: 20px; text-align: center; pointer-events: none; }
+textarea { width: 100%; font: 13px ui-monospace, Consolas, monospace; color: var(--text); background: #050916; border: 1px solid var(--line); border-radius: 8px; padding: 8px; }
+.steps { list-style: none; padding: 0; margin: 0; display: grid; gap: 4px; font-size: 13.5px; }
+.steps li::before { content: "\2022"; margin-right: 8px; color: var(--muted); }
+.steps li[data-status=active]::before { color: #fbbf24; }
+.steps li[data-status=done]::before { content: "\2713"; color: #34d399; }
+.steps li[data-status=failed]::before, .steps li[data-status=skipped]::before { content: "\2013"; color: #fbbf24; }
+.steps small { display: block; color: var(--muted); margin-left: 18px; }
+.grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.grid2 label { display: grid; gap: 4px; font-size: 13px; color: var(--muted); }
+
+/* narrow screens: the picture on top, the controls below it, and the page scrolls */
+@media (max-width: 760px) {
+  html, body { height: auto; }
+  body { grid-template-columns: 1fr; grid-template-rows: 60vh auto; grid-template-rows: 60svh auto; }
+  aside { overflow: visible; border-left: 0; border-top: 1px solid var(--line); }
+}

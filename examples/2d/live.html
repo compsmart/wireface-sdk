@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="en">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Wireface 2D: live lip sync</title>
+<link rel="icon" href="../../assets/brand/mark.svg" type="image/svg+xml">
+<link rel="stylesheet" href="example.css">
+<div class="stage"><canvas></canvas></div>
+<aside>
+  <h1>Live lip sync</h1>
+  <p>Any audio as it plays: a microphone, or an audio file. Mouth shapes come from loudness and the shape of the spectrum, frame by frame (core's <code>LiveLipSync</code>). For a voice that streams in as PCM, such as Gemini Live, use <code>StreamVoice</code>: see the conversation example.</p>
+  <div class="row"><button id="mic">Use my microphone</button><input type="file" id="file" accept="audio/*" aria-label="An audio file"></div>
+  <audio id="player" controls hidden></audio>
+  <p id="status" class="error"></p>
+</aside>
+<script type="module">
+  import { createFace2d, LiveLipSync } from '../../dist/2d.js';
+
+  const face = createFace2d(document.querySelector('canvas'), { config: { framing: 'face' } });
+  await face.useCharacter('kit', { transition: 0 });
+  const mic = document.getElementById('mic'), player = document.getElementById('player'), status = document.getElementById('status');
+  let audio = null, stopMic = null, fileLips = null, fileOn = false;
+  // one source works the mouth at a time: starting the microphone stops the file, and the other way round
+  const micOff = () => { stopMic?.(); stopMic = null; mic.textContent = 'Use my microphone'; };
+  const fileOff = () => { if (fileOn) { fileOn = false; fileLips.detach(); } };
+
+  mic.onclick = async () => {
+    if (stopMic) return micOff();
+    audio ??= new AudioContext();                               // made on a click, so the browser allows sound
+    mic.disabled = true;
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      fileOff();
+      player.pause();
+      const stopLips = face.listenTo(audio, stream);
+      stopMic = () => { stopLips(); stream.getTracks().forEach(t => t.stop()); };   // stopped tracks: the recording light goes off
+      mic.textContent = 'Stop';
+      status.textContent = '';
+    } catch (err) {
+      status.textContent = `No microphone: ${err.message}`;
+    } finally {
+      mic.disabled = false;
+    }
+  };
+
+  // an element joins the audio graph only once: the player gets one LiveLipSync, attached while it plays
+  player.onplay = () => {
+    micOff();
+    if (fileOn) return;
+    fileLips ??= new LiveLipSync(audio, player);
+    fileLips.attach(face);
+    fileOn = true;
+  };
+  player.onpause = player.onended = fileOff;
+  document.getElementById('file').onchange = e => {
+    const file = e.target.files[0];
+    if (!file) return;
+    audio ??= new AudioContext();
+    if (player.src) URL.revokeObjectURL(player.src);            // the last file's
+    player.src = URL.createObjectURL(file);
+    player.hidden = false;
+    player.play().catch(err => { if (err.name !== 'AbortError') status.textContent = `That file won't play: ${err.message}`; });
+  };
+</script>

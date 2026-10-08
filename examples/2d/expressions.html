@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="en">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Wireface 2D: expressions</title>
+<link rel="icon" href="../../assets/brand/mark.svg" type="image/svg+xml">
+<link rel="stylesheet" href="example.css">
+<div class="stage"><canvas></canvas></div>
+<aside>
+  <h1>Expressions</h1>
+  <p>The same expressions as Wireface Core: core's rig moves the canonical face, and the 2D engine carries the movement onto the picture.</p>
+  <div class="row" id="moods"></div>
+  <p>Two of your own, made with <code>defineExpression</code>:</p>
+  <div class="row" id="custom"></div>
+  <p>A standing mood, worn when nothing else is showing:</p>
+  <select id="mood" aria-label="Standing mood"><option value="">none</option></select>
+  <p>States show in the eyes and posture:</p>
+  <select id="state" aria-label="State"><option>idle</option><option>thinking</option><option>busy</option><option>muted</option><option>error</option><option>asleep</option></select>
+</aside>
+<script type="module">
+  import { createFace2d, defineExpression, MOODS } from '../../dist/2d.js';
+
+  const face = createFace2d(document.querySelector('canvas'), { config: { framing: 'face' } });
+  await face.useCharacter('mabel', { transition: 0 });
+
+  defineExpression('wink', { blinkL: 1, smileL: 0.45, smileR: 0.3, browUpR: 0.25, squintL: 0.3 });
+  defineExpression('smug', { smileR: 0.6, browUpL: 0.4, squintL: 0.25, squintR: 0.25, pout: 0.15 });
+
+  const button = (parent, name) => {
+    const b = document.createElement('button');
+    b.textContent = name;
+    b.onclick = () => face.express(name, 3);
+    parent.append(b);
+  };
+  for (const m of MOODS) if (m !== 'neutral') button(document.getElementById('moods'), m);
+  for (const m of ['wink', 'smug']) button(document.getElementById('custom'), m);
+  for (const m of MOODS) document.getElementById('mood').append(new Option(m, m));
+  document.getElementById('mood').onchange = e => face.mood(e.target.value || null, 0.7);
+  document.getElementById('state').onchange = e => face.state(e.target.value);
+</script>

@@ -1,0 +1,83 @@
+<!doctype html>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Wireface three.js: hello</title>
+<link rel="stylesheet" href="example.css">
+<script type="importmap">
+{ "imports": {
+  "three": "../../node_modules/three/build/three.module.js",
+  "three/addons/": "../../node_modules/three/examples/jsm/",
+  "@wireface/sdk": "../../dist/wireface.js",
+  "@wireface/sdk/2d": "../../dist/2d.js",
+  "@wireface/sdk/2d/live": "../../dist/2d-live.js",
+  "@wireface/sdk/three": "../../dist/three.js",
+  "@wireface/sdk/three/characters": "../../dist/three-characters.js",
+  "@wireface/sdk/three/kit": "../../dist/three-kit.js"
+} }
+</script>
+<canvas></canvas>
+<aside>
+  <a class="back" href="./">&larr; examples</a>
+  <h1>Hello</h1>
+  <p>The smallest page: a body, a head, and a FaceMesh on it. The face blinks, breathes, looks at you, and talks
+    when you ask.</p>
+  <div class="row"><button id="talk">Say hello</button></div>
+  <div class="caption" id="caption"></div>
+</aside>
+<script type="module">
+  import * as THREE from 'three';
+  import { FaceMesh, attachFace, unlockAudio } from '@wireface/sdk/three';
+
+  // An ordinary three.js scene...
+  const canvas = document.querySelector('canvas');
+  const renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
+  renderer.setPixelRatio(Math.min(2, devicePixelRatio));
+  renderer.toneMapping = THREE.ACESFilmicToneMapping;
+  const scene = new THREE.Scene();
+  scene.background = new THREE.Color('#0b1020');
+  const camera = new THREE.PerspectiveCamera(30, 1, 0.05, 20);
+  camera.position.set(0, 1.0, 1.7);
+  camera.lookAt(0, 0.85, 0);
+  scene.add(new THREE.HemisphereLight('#dfe8ff', '#2a2230', 1.3));
+  const sun = new THREE.DirectionalLight('#fff1e0', 2.4);
+  sun.position.set(1, 2, 2);
+  scene.add(sun);
+
+  // ...a body, and a head to put a face on (a Group: the face brings the head's shape itself)
+  const body = new THREE.Mesh(new THREE.CapsuleGeometry(0.17, 0.4, 8, 24), new THREE.MeshStandardMaterial({ color: '#e76f51', roughness: 0.7 }));
+  body.position.y = 0.62;
+  scene.add(body);
+  const head = new THREE.Group();
+  head.position.y = 1.08;
+  scene.add(head);
+
+  // The face: Mei's photo skin on a 24 cm face, which makes a whole head (its skull) in her skin tone
+  const face = new FaceMesh({ skin: 'mei', size: 0.24 });
+  attachFace(head, face);          // now it nods and sways `head` as it talks
+  face.gazeAt(camera);             // eyes first, then the head, follow the camera
+
+  // Hair: a cap over the skull, tipped back so it clears the forehead (add it to face.head and it moves with it)
+  const { skull } = face.bounds;
+  const cap = new THREE.SphereGeometry(1, 48, 24, 0, Math.PI * 2, 0, 1.4).rotateX(-0.45);
+  const hair = new THREE.Mesh(cap, new THREE.MeshStandardMaterial({ color: '#1d1714', roughness: 0.55 }));
+  hair.scale.copy(skull.radius).multiplyScalar(1.07);    // the skull's own ellipsoid, a little bigger
+  hair.position.copy(skull.center);
+  face.head.add(hair);
+
+  const caption = document.querySelector('#caption');
+  document.querySelector('#talk').onclick = async () => {
+    const audioContext = unlockAudio();           // sound needs a click first
+    await face.say(await face.clip('mei'), { audioContext, onCaption: t => (caption.textContent = t) });
+  };
+  face.express('happy', 3);
+
+  renderer.setAnimationLoop(() => {
+    const w = canvas.clientWidth, h = canvas.clientHeight;
+    if (canvas.width !== Math.round(w * renderer.getPixelRatio()) || canvas.height !== Math.round(h * renderer.getPixelRatio())) {
+      renderer.setSize(w, h, false);
+      camera.aspect = w / h;
+      camera.updateProjectionMatrix();
+    }
+    renderer.render(scene, camera);                // the face updates itself as it's drawn
+  });
+</script>

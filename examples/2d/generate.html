@@ -1,0 +1,55 @@
+<!doctype html>
+<html lang="en">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Wireface 2D: generate</title>
+<link rel="icon" href="../../assets/brand/mark.svg" type="image/svg+xml">
+<link rel="stylesheet" href="example.css">
+<div class="stage"><canvas></canvas><p class="hint" id="hint">Your character will appear here.</p></div>
+<aside>
+  <h1>A new character</h1>
+  <p>Describe someone and pick an art style. The dev server asks Gemini to draw them (<code>/api/generate</code>: straight on, mouth closed, plain background, so it animates well), then their face is found like any other picture's.</p>
+  <textarea id="prompt" rows="3" aria-label="Describe the character">A cheerful lighthouse keeper with a white beard and a yellow raincoat</textarea>
+  <select id="style" aria-label="Art style"></select>
+  <button id="go">Draw and bring to life</button>
+  <p id="status"></p>
+</aside>
+<script type="module">
+  import { createFace2d, ART_STYLES } from '../../dist/2d.js';
+
+  const face = createFace2d(document.querySelector('canvas'), { detect: { gemini: { endpoint: '/api/detect' } } });
+  for (const [id, s] of Object.entries(ART_STYLES)) if (id !== 'other') document.getElementById('style').append(new Option(s.label, id));
+  document.getElementById('style').value = 'watercolor';
+  const status = text => { document.getElementById('status').textContent = text; };
+  const go = document.getElementById('go'), hint = document.getElementById('hint');
+
+  // drawing needs the dev server's API, with a Gemini key: say so up front rather than fail on the click
+  const api = await fetch('/api/status').then(r => (r.ok ? r.json() : {}), () => ({}));
+  if (!api.gemini) {
+    go.disabled = true;
+    status('This needs the dev server with a Gemini key: set GEMINI_API_KEY (or put it in .env), then restart npm start.');
+    hint.textContent = 'Gemini draws your character here once the dev server has a key.';
+  }
+
+  go.onclick = async () => {
+    go.disabled = true;
+    try {
+      status('Gemini is drawing...');
+      const r = await fetch('/api/generate', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ prompt: document.getElementById('prompt').value, style: document.getElementById('style').value }),
+      });
+      const json = await r.json().catch(() => ({}));
+      if (!r.ok) throw new Error(json.error || `the server said ${r.status}`);
+      const picture = await (await fetch(`data:${json.mimeType};base64,${json.image}`)).blob();
+      const character = await face.useCharacter(picture, { onStep: s => status(`${s.label}: ${s.status} ${s.detail}`) });
+      hint.remove();
+      status(`Meet ${character.name}. ${character.description}`);
+      face.express('happy', 3);
+    } catch (err) {
+      status(`Couldn't: ${err.message}`);
+    } finally {
+      go.disabled = false;
+    }
+  };
+</script>

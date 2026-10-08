@@ -1,0 +1,66 @@
+<!doctype html>
+<html lang="en">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Wireface 2D: detect</title>
+<link rel="icon" href="../../assets/brand/mark.svg" type="image/svg+xml">
+<link rel="stylesheet" href="example.css">
+<div class="stage" id="stage"><canvas></canvas></div>
+<aside>
+  <h1>Finding the face</h1>
+  <p>Choose any picture with a face: a photo, a painting, anime, pixel art. Gemini Pro finds the face and names 19 points on it (through the dev server's <code>/api/detect</code>, which holds the key), MediaPipe adds 468 dense landmarks locally where it can, and the two are combined into the mesh.</p>
+  <input type="file" id="file" accept="image/*" aria-label="A picture with a face">
+  <ol class="steps" id="steps"></ol>
+  <pre id="result"></pre>
+</aside>
+<script type="module">
+  import { createFace2d, STEPS } from '../../dist/2d.js';
+  import { DetectionOverlay } from '../../dist/2d.js';
+
+  const stage = document.getElementById('stage');
+  const api = await fetch('/api/status').then(r => (r.ok ? r.json() : {}), () => ({}));
+  const face = createFace2d(stage.querySelector('canvas'), {
+    detect: api.gemini ? { gemini: { endpoint: '/api/detect' } } : {},   // no key on the dev server: MediaPipe only
+  });
+  const overlay = new DetectionOverlay(stage);
+  await face.useCharacter('rex', { transition: 0 });
+
+  const list = document.getElementById('steps'), input = document.getElementById('file'), result = document.getElementById('result');
+  input.onchange = async e => {
+    const file = e.target.files[0];
+    if (!file) return;
+    result.textContent = '';
+    if (!file.type.startsWith('image/')) { result.textContent = 'That isn\'t a picture: choose a JPEG, PNG or WebP.'; return; }
+    input.disabled = true;                                       // one picture at a time
+    list.innerHTML = STEPS.map(s => `<li data-id="${s.id}">${s.label}<small></small></li>`).join('');
+    try {
+      // where the picture will sit (the face's default framing shows all of it, centred)
+      const bitmap = await createImageBitmap(file);
+      const r = stage.getBoundingClientRect(), s = Math.min(r.width / bitmap.width, r.height / bitmap.height);
+      overlay.clear();
+      overlay.place({ x: (r.width - bitmap.width * s) / 2, y: (r.height - bitmap.height * s) / 2, width: bitmap.width * s, height: bitmap.height * s });
+      bitmap.close();
+      face.disappear();
+      const character = await face.useCharacter(file, {
+        transition: 1,
+        onStep: step => {
+          const li = list.querySelector(`[data-id=${step.id}]`);
+          li.dataset.status = step.status;
+          li.querySelector('small').textContent = step.detail + (step.ms ? ` (${(step.ms / 1000).toFixed(1)} s)` : '');
+          overlay.step(step);                                    // the box, points, landmarks and mesh as they arrive
+        },
+      });
+      overlay.fade();
+      result.textContent = JSON.stringify({
+        mode: character.mode, source: character.source, style: character.style, name: character.name,
+        voice: character.voice, persona: character.persona, pose: character.pose,
+      }, null, 2);
+    } catch (err) {
+      overlay.clear();
+      face.appear();                                             // the last character comes back
+      result.textContent = `Couldn't find a face in that: ${err.message}`;
+    } finally {
+      input.disabled = false;
+    }
+  };
+</script>

@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="en">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Wireface 2D: talk</title>
+<link rel="icon" href="../../assets/brand/mark.svg" type="image/svg+xml">
+<link rel="stylesheet" href="example.css">
+<div class="stage"><canvas></canvas></div>
+<aside>
+  <h1>Talk</h1>
+  <p>Each character's own line: Gemini text-to-speech, with a mouth track aligned phoneme by phoneme (Wireface Core's <code>tools/lipsync</code>), so the lips close on every m, b and p. Click a name: the first click also turns the sound on.</p>
+  <div class="row" id="lines"></div>
+  <div class="caption" id="caption"></div>
+</aside>
+<script type="module">
+  import { createFace2d } from '../../dist/2d.js';
+
+  const face = createFace2d(document.querySelector('canvas'), { config: { framing: 'face' } });
+  const characters = await face.catalogue();
+  const cast = await (await fetch('../../assets/2d/voices/cast.json')).json();
+  const caption = document.getElementById('caption');
+  let audio = null, cues = [], asked = 0;
+
+  for (const line of cast) {
+    const b = document.createElement('button');
+    b.textContent = line.name;
+    b.onclick = async () => {
+      const ticket = ++asked;
+      audio ??= new AudioContext();                         // made on a click, so the browser allows sound
+      for (const t of cues.splice(0)) clearTimeout(t);      // the last line's expressions don't land on this one
+      face.hush();
+      caption.textContent = '';
+      try {
+        await face.useCharacter(line.id, { transition: 0.6 });
+        const clip = await face.clip(line.id);
+        if (ticket !== asked) return;                       // another name was clicked meanwhile
+        cues = line.cues.map(([at, mood]) => setTimeout(() => face.express(mood, 3), 150 + at * 1000));
+        await face.say(clip, { audioContext: audio, onCaption: text => { caption.textContent = text; } });
+      } catch (err) {
+        caption.textContent = `Couldn't play that line: ${err.message}`;
+      }
+    };
+    document.getElementById('lines').append(b);
+  }
+  await face.useCharacter(characters[0].id, { transition: 0 });
+</script>

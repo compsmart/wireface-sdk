@@ -1,0 +1,7 @@
+{
+  "$schema": "../face.schema.json",
+  "preset": "ember",
+  "style": "sculpt",
+  "colors": { "skin": "#d1a68c", "iris": "#3b6ea8" },
+  "expressiveness": 1.3
+}

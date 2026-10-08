@@ -1,0 +1,75 @@
+<!doctype html>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Wireface three.js: two characters talking</title>
+<link rel="stylesheet" href="example.css">
+<script type="importmap">
+{ "imports": {
+  "three": "../../node_modules/three/build/three.module.js",
+  "three/addons/": "../../node_modules/three/examples/jsm/",
+  "@wireface/sdk": "../../dist/wireface.js",
+  "@wireface/sdk/2d": "../../dist/2d.js",
+  "@wireface/sdk/2d/live": "../../dist/2d-live.js",
+  "@wireface/sdk/three": "../../dist/three.js",
+  "@wireface/sdk/three/characters": "../../dist/three-characters.js",
+  "@wireface/sdk/three/kit": "../../dist/three-kit.js"
+} }
+</script>
+<canvas></canvas>
+<aside>
+  <a class="back" href="./">&larr; examples</a>
+  <h1>Two characters talking</h1>
+  <p>Turn-taking: whoever speaks looks at you, the listener looks at the speaker, nods along (<code>listening</code>
+    is a face state of its own) and reacts at the end. Each line is a recorded clip with its expressions cued along
+    it.</p>
+  <div class="row"><button id="play">Play the scene</button></div>
+  <div class="caption" id="caption"></div>
+  <pre>async function line(speaker, listener) {
+  listener.gazeAt(speaker.head);
+  speaker.gazeAt(camera);
+  listener.face.view.event({ topic: 'percept.audio.partial' });
+  await speaker.speak({ audioContext, onCaption });
+  listener.face.express('amused', 2.5);
+}</pre>
+</aside>
+<script type="module">
+  import { unlockAudio } from '@wireface/sdk/three';
+  import { buildCharacter } from '@wireface/sdk/three/characters';
+  import { stage } from './stage.js';
+
+  const { scene, camera, onFrame } = stage({ camera: [0, 1.05, 2.3], target: [0, 0.82, 0], width: 1.5 });
+  const walter = buildCharacter('walter'), mei = buildCharacter('mei');
+  walter.root.position.set(-0.42, 0, 0);
+  walter.root.rotation.y = 0.45;
+  mei.root.position.set(0.42, 0, 0);
+  mei.root.rotation.y = -0.45;
+  scene.add(walter.root, mei.root);
+  walter.gazeAt(mei.head);
+  mei.gazeAt(walter.head);
+  onFrame((dt, t) => { walter.update(dt, t); mei.update(dt, t); });
+
+  const caption = document.querySelector('#caption');
+  async function line(speaker, listener, audioContext, reaction) {
+    listener.gazeAt(speaker.head);
+    speaker.gazeAt(camera);
+    // the listener shows it's listening while the other talks
+    const nod = setInterval(() => listener.face.view.event({ topic: 'percept.audio.partial' }), 500);
+    try {
+      await speaker.speak({ audioContext, onCaption: t => (caption.textContent = `${speaker.name}: ${t}`) });
+    } finally {
+      clearInterval(nod);
+    }
+    listener.face.express(reaction, 2.5);
+    speaker.gazeAt(listener.head);
+    await new Promise(r => setTimeout(r, 900));
+  }
+
+  document.querySelector('#play').onclick = async e => {
+    e.target.disabled = true;
+    const audioContext = unlockAudio();
+    await line(mei, walter, audioContext, 'happy');
+    await line(walter, mei, audioContext, 'amused');
+    caption.textContent = '';
+    e.target.disabled = false;
+  };
+</script>

@@ -1,0 +1,8 @@
+{
+  "$schema": "../face.schema.json",
+  "preset": "cyan",
+  "style": "hologram",
+  "glow": 0.6,
+  "wire": 0.8,
+  "fill": 0.3
+}

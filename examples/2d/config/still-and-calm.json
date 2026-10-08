@@ -1,0 +1,9 @@
+{
+  "$schema": "../face2d.schema.json",
+  "character": "eleanor",
+  "motion": 0.4,
+  "expressiveness": 0.7,
+  "follow_mouse": false,
+  "mouth_gain": 0.8,
+  "feather": 0.5
+}

@@ -1,0 +1,70 @@
+<!doctype html>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Wireface three.js: styles</title>
+<link rel="stylesheet" href="example.css">
+<script type="importmap">
+{ "imports": {
+  "three": "../../node_modules/three/build/three.module.js",
+  "three/addons/": "../../node_modules/three/examples/jsm/",
+  "@wireface/sdk": "../../dist/wireface.js",
+  "@wireface/sdk/2d": "../../dist/2d.js",
+  "@wireface/sdk/2d/live": "../../dist/2d-live.js",
+  "@wireface/sdk/three": "../../dist/three.js",
+  "@wireface/sdk/three/characters": "../../dist/three-characters.js",
+  "@wireface/sdk/three/kit": "../../dist/three-kit.js"
+} }
+</script>
+<canvas></canvas>
+<aside>
+  <a class="back" href="./">&larr; examples</a>
+  <h1>Styles</h1>
+  <p>One face, four looks, all lit by the same lights: <b>photo</b> (a skin), <b>sculpt</b> (any skin colour),
+    <b>toon</b> (cel-shaded) and <b>hologram</b> (glowing wireframe, made for a bloom pass). The colour presets set
+    the hologram's colours, and the glow of a sweep; <code>skin_amount</code> cross-fades a skin into the wireframe.</p>
+  <h2>Colours</h2>
+  <div class="row" id="presets"></div>
+  <label class="slider">Wireframe <input id="amount" type="range" min="0" max="1" step="0.01" value="1"> Skin</label>
+  <div class="row"><button id="sweep">Sweep a new skin on</button><button id="vanish">Vanish and return</button></div>
+  <pre>new FaceMesh({ skin: 'arjun' });                   // photo
+new FaceMesh({ style: 'sculpt', colors: { skin: '#c68863' } });
+new FaceMesh({ style: 'toon', colors: { skin: '#f2b38b' } });
+new FaceMesh({ style: 'hologram', preset: 'violet' });
+face.set({ skin_amount: 0.5 });          // half wireframe
+await face.useSkin('omar', { sweep: 1.4 });</pre>
+</aside>
+<script type="module">
+  import { FaceMesh, PRESETS } from '@wireface/sdk/three';
+  import { stage } from './stage.js';
+
+  const { scene, camera } = stage({ camera: [0, 1.12, 2.35], target: [0, 1.08, 0], width: 1.5, floor: false, bloom: 0.5 });   // bloom: for the hologram's glow
+  const looks = [
+    { label: 'photo', skin: 'arjun' },
+    { label: 'sculpt', style: 'sculpt', colors: { skin: '#c68863', lips: '#a0524f' } },
+    { label: 'toon', style: 'toon', colors: { skin: '#f2b38b', lips: '#d06d6a', iris: '#2563eb' } },
+    { label: 'hologram', style: 'hologram', preset: 'violet', glow: 1.2, points: 0.4 },
+  ];
+  const faces = looks.map(({ label, ...look }, i) => {
+    const face = new FaceMesh({ size: 0.2, ...look });
+    face.position.set((i - 1.5) * 0.36, 1.08, 0);
+    face.gazeAt(camera, { turn: 0.3 });
+    scene.add(face);
+    return face;
+  });
+
+  for (const [name, p] of Object.entries(PRESETS)) {
+    const b = document.createElement('button');
+    b.textContent = name;
+    b.style.borderColor = p.primary;
+    b.onclick = () => faces.forEach(f => f.set({ preset: name }));
+    document.querySelector('#presets').append(b);
+  }
+  document.querySelector('#amount').oninput = e => faces.slice(0, 3).forEach(f => f.set({ skin_amount: +e.target.value }));
+  const skins = ['omar', 'ruth', 'arjun', 'amara'];
+  let n = 0;
+  document.querySelector('#sweep').onclick = () => faces[0].useSkin(skins[n++ % skins.length], { sweep: 1.4 });
+  document.querySelector('#vanish').onclick = async () => {
+    await Promise.all(faces.map(f => f.disappear()));
+    await Promise.all(faces.map(f => f.appear()));
+  };
+</script>

@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="en">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Wireface: talk</title>
+<link rel="icon" href="../../assets/brand/mark.svg" type="image/svg+xml">
+<link rel="stylesheet" href="example.css">
+<canvas></canvas>
+<aside>
+  <h1>Talking</h1>
+  <p>Each clip is audio plus a mouth track made from it and its text (<code>tools/lipsync</code>), so the lips close on
+    m, b and p and round on "oo". Turn the sound on to hear it; muted, it mimes.</p>
+  <div class="row"><button id="sound">Sound off</button></div>
+  <div class="row" id="clips"></div>
+  <div class="caption" id="caption"></div>
+  <p><a href="./">All examples</a></p>
+</aside>
+<script type="module">
+  import { createFace, ASSETS } from '../../dist/wireface.js';
+
+  const face = createFace(document.querySelector('canvas'));
+  const cast = await (await fetch(new URL('voices/cast.json', ASSETS))).json();
+  let audio = null;
+  document.getElementById('sound').onclick = async e => {
+    audio = audio ? (audio.close(), null) : new AudioContext();      // browsers allow sound after a click
+    e.target.textContent = audio ? 'Sound on' : 'Sound off';
+    e.target.classList.toggle('on', !!audio);
+  };
+  const caption = document.getElementById('caption');
+  let cues = [];                                                       // the expression cues of the clip being said
+  for (const c of cast) {
+    const b = document.createElement('button');
+    b.textContent = c.name;
+    b.onclick = async () => {
+      for (const timer of cues) clearTimeout(timer);                   // another clip's cues are no longer wanted
+      const mine = cues = [];
+      await face.useSkin(c.id, { sweep: 1.2 });
+      const clip = await face.clip(c.id);
+      if (cues !== mine) return;                                       // another was picked meanwhile
+      cues = c.cues.map(([at, name]) => setTimeout(() => face.express(name, clip.duration - at + 0.5), at * 1000));
+      await face.say(clip, { audioContext: audio, onCaption: t => { caption.textContent = t; } });
+    };
+    document.getElementById('clips').append(b);
+  }
+</script>

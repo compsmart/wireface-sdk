@@ -1,0 +1,8 @@
+{
+  "$schema": "../face2d.schema.json",
+  "character": "kit",
+  "smoothing": "pixel",
+  "teeth_mode": "asset",
+  "teeth_style": "vampire",
+  "expressiveness": 1.4
+}

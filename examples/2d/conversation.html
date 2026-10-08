@@ -1,0 +1,42 @@
+<!doctype html>
+<html lang="en">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Wireface 2D: conversation</title>
+<link rel="icon" href="../../assets/brand/mark.svg" type="image/svg+xml">
+<link rel="stylesheet" href="example.css">
+<div class="stage"><canvas></canvas></div>
+<aside>
+  <h1>Conversation</h1>
+  <p>A spoken conversation through Gemini Live. The dev server mints a one-use token locked to the character's persona, voice and tools (<code>/api/live/token</code>), so the key never reaches this page. The replies stream in as audio; the mouth is worked out from it before each piece is heard.</p>
+  <select id="who" aria-label="Character"></select>
+  <div class="row"><button id="start">Start talking</button><button id="mic">Microphone</button><button id="end">End</button></div>
+  <form id="form" class="row"><input id="say" placeholder="Or type here" aria-label="Say something" style="flex:1"><button>Send</button></form>
+  <p id="state">Off</p>
+  <div class="caption" id="caption"></div>
+</aside>
+<script type="module">
+  import { createFace2d } from '../../dist/2d.js';
+  import { Conversation } from '../../dist/2d-live.js';
+
+  const face = createFace2d(document.querySelector('canvas'), { config: { framing: 'face' } });
+  const who = document.getElementById('who');
+  for (const c of await face.catalogue()) who.append(new Option(`${c.name} (${c.styleLabel})`, c.id));
+  await face.useCharacter(who.value, { transition: 0 });
+
+  let audio = null;
+  const talk = new Conversation(face, {
+    audio: async () => (audio ??= new AudioContext()),
+    character: () => ({ character: who.value }),               // what the token endpoint is asked for
+    onState: ({ state, detail }) => { document.getElementById('state').textContent = detail ? `${state}: ${detail}` : state; },
+    onCaption: ({ who: speaker, text }) => { document.getElementById('caption').textContent = text ? `${speaker === 'you' ? 'You' : 'Them'}: ${text}` : ''; },
+  });
+  who.onchange = async () => {
+    const c = await face.useCharacter(who.value);
+    talk.changeFace(c.name);                                   // a new voice: the conversation carries on in a new session
+  };
+  document.getElementById('start').onclick = () => talk.start();
+  document.getElementById('mic').onclick = () => talk.setMic(!talk.mic);
+  document.getElementById('end').onclick = () => talk.end();
+  document.getElementById('form').onsubmit = e => { e.preventDefault(); talk.send(document.getElementById('say').value); document.getElementById('say').value = ''; };
+</script>

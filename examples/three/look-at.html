@@ -1,0 +1,90 @@
+<!doctype html>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Wireface three.js: looking at things</title>
+<link rel="stylesheet" href="example.css">
+<script type="importmap">
+{ "imports": {
+  "three": "../../node_modules/three/build/three.module.js",
+  "three/addons/": "../../node_modules/three/examples/jsm/",
+  "@wireface/sdk": "../../dist/wireface.js",
+  "@wireface/sdk/2d": "../../dist/2d.js",
+  "@wireface/sdk/2d/live": "../../dist/2d-live.js",
+  "@wireface/sdk/three": "../../dist/three.js",
+  "@wireface/sdk/three/characters": "../../dist/three-characters.js",
+  "@wireface/sdk/three/kit": "../../dist/three-kit.js"
+} }
+</script>
+<canvas></canvas>
+<aside>
+  <a class="back" href="./">&larr; examples</a>
+  <h1>Looking at things</h1>
+  <p><code>face.gazeAt(target)</code> takes anything in the world: a point, a camera, another head. The eyes go first
+    and converge on it; past a little way the head turns too, up to <code>turn</code> radians, and the eyes do the
+    rest.</p>
+  <div class="row">
+    <button id="orb" class="on">The orb</button>
+    <button id="pointer">Your pointer</button>
+    <button id="camera">The camera</button>
+    <button id="each">Each other</button>
+    <button id="ahead">Ahead</button>
+  </div>
+  <label class="slider">Head turn <input id="turn" type="range" min="0" max="1.4" step="0.05" value="0.9"> <span id="turn-v">0.9</span></label>
+  <pre>face.gazeAt(orb);                     // an Object3D
+face.gazeAt(new THREE.Vector3(1, 2, 0)); // a point
+face.gazeAt(camera, { turn: 0.4 });    // eyes more, head less
+face.gazeAt(null);                     // ahead</pre>
+</aside>
+<script type="module">
+  import * as THREE from 'three';
+  import { FaceMesh } from '@wireface/sdk/three';
+  import { stage } from './stage.js';
+
+  const { scene, camera, renderer, onFrame } = stage({ camera: [0, 1.35, 2.6], target: [0, 1.1, 0], width: 1.7 });
+
+  // three heads on posts
+  const faces = [{ skin: 'amara' }, { skin: 'marcus' }, { style: 'toon', colors: { skin: '#f2b38b', iris: '#3b82f6' } }].map((look, i) => {
+    const post = new THREE.Mesh(new THREE.CylinderGeometry(0.03, 0.05, 0.85), new THREE.MeshStandardMaterial({ color: '#3a4256', metalness: 0.6, roughness: 0.4 }));
+    post.position.set((i - 1) * 0.6, 0.425, 0);
+    post.castShadow = true;
+    scene.add(post);
+    const face = new FaceMesh({ size: 0.2, ...look });
+    face.position.set((i - 1) * 0.6, 1.0, 0);
+    scene.add(face);
+    return face;
+  });
+
+  // something to look at: a glowing orb on a slow figure of eight
+  const orb = new THREE.Mesh(new THREE.SphereGeometry(0.05, 24, 16), new THREE.MeshBasicMaterial({ color: new THREE.Color('#fbbf24').multiplyScalar(2) }));
+  orb.add(new THREE.PointLight('#fbbf24', 1.5, 2));
+  scene.add(orb);
+  onFrame((dt, t) => orb.position.set(Math.sin(t * 0.7) * 1.4, 1.2 + Math.sin(t * 1.4) * 0.45, 0.9 + Math.cos(t * 0.7) * 0.5));
+
+  // the pointer, as a point in the world: on a plane through the heads, facing the camera
+  const pointer = new THREE.Object3D(), ray = new THREE.Raycaster(), plane = new THREE.Plane(new THREE.Vector3(0, 0, 1), -0.8);
+  scene.add(pointer);
+  renderer.domElement.addEventListener('pointermove', e => {
+    const r = renderer.domElement.getBoundingClientRect();
+    ray.setFromCamera(new THREE.Vector2(((e.clientX - r.left) / r.width) * 2 - 1, -((e.clientY - r.top) / r.height) * 2 + 1), camera);
+    ray.ray.intersectPlane(plane, pointer.position);
+  });
+
+  let turn = 0.9, mode = 'orb';
+  const look = () => faces.forEach((f, i) => {
+    const target = { orb, pointer, camera, ahead: null, each: faces[(i + 1) % faces.length] }[mode];
+    f.gazeAt(target, { turn });
+  });
+  look();
+  for (const id of ['orb', 'pointer', 'camera', 'each', 'ahead']) {
+    document.querySelector(`#${id}`).onclick = e => {
+      mode = id;
+      document.querySelectorAll('aside .row button').forEach(b => b.classList.toggle('on', b === e.target));
+      look();
+    };
+  }
+  document.querySelector('#turn').oninput = e => {
+    turn = +e.target.value;
+    document.querySelector('#turn-v').textContent = turn.toFixed(2);
+    look();
+  };
+</script>

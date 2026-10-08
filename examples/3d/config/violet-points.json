@@ -1,0 +1,9 @@
+{
+  "$schema": "../face.schema.json",
+  "preset": "violet",
+  "style": "hologram",
+  "points": 0.8,
+  "wire": 0.5,
+  "glow": 1.2,
+  "scanlines": 0.6
+}

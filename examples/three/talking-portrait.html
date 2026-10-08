@@ -1,0 +1,91 @@
+<!doctype html>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Wireface three.js: a talking portrait</title>
+<link rel="stylesheet" href="example.css">
+<script type="importmap">
+{ "imports": {
+  "three": "../../node_modules/three/build/three.module.js",
+  "three/addons/": "../../node_modules/three/examples/jsm/",
+  "@wireface/sdk": "../../dist/wireface.js",
+  "@wireface/sdk/2d": "../../dist/2d.js",
+  "@wireface/sdk/2d/live": "../../dist/2d-live.js",
+  "@wireface/sdk/three": "../../dist/three.js",
+  "@wireface/sdk/three/characters": "../../dist/three-characters.js",
+  "@wireface/sdk/three/kit": "../../dist/three-kit.js"
+} }
+</script>
+<canvas></canvas>
+<aside>
+  <a class="back" href="./">&larr; examples</a>
+  <h1>A talking portrait</h1>
+  <p>A <code>FaceScreen</code> on Wireface 2D, which makes any picture of a face talk. The picture is the texture of a
+    canvas in a gilt frame on the wall: it speaks its line, and its eyes follow you round the room. Pick another
+    picture from 2D's thirteen art styles.</p>
+  <div class="row" id="pictures"></div>
+  <div class="row"><button id="talk">Speak</button></div>
+  <div class="caption" id="caption"></div>
+  <pre>const screen = new FaceScreen({ engine: '2d',
+  character: 'eleanor', resolution: [416, 520],
+  config: { framing: 'cover' } });
+painting.add(screen.bind(new THREE.Mesh(
+  screenGeometry({ width: 0.46, height: 0.575 }),
+  screen.material())));
+screen.gazeAt(camera);
+await screen.useCharacter('hazel', { transition: 0.9 });</pre>
+</aside>
+<script type="module">
+  import * as THREE from 'three';
+  import { FaceScreen, screenGeometry, unlockAudio, voices } from '@wireface/sdk/three';
+  import { stage } from './stage.js';
+
+  const { scene, camera } = stage({ camera: [0.6, 1.5, 1.7], target: [0, 1.5, 0], background: '#1a1410' });
+
+  // a wall, and a picture on it
+  const wall = new THREE.Mesh(new THREE.PlaneGeometry(6, 4), new THREE.MeshStandardMaterial({ color: '#3d2f3a', roughness: 0.9 }));
+  wall.position.set(0, 2, -0.05);
+  wall.receiveShadow = true;
+  scene.add(wall);
+  const W = 0.46, H = 0.575;
+  const painting = new THREE.Group();
+  painting.position.set(0, 1.5, 0);
+  scene.add(painting);
+  const screen = new FaceScreen({ engine: '2d', character: 'eleanor', resolution: [416, 520], config: { framing: 'cover', zoom: 1.08 } });
+  painting.add(screen.bind(new THREE.Mesh(screenGeometry({ width: W, height: H }), screen.material())));
+  screen.gazeAt(camera);
+
+  // the frame: a gilt border round the picture
+  const shape = new THREE.Shape().moveTo(-W / 2 - 0.07, -H / 2 - 0.07).lineTo(W / 2 + 0.07, -H / 2 - 0.07).lineTo(W / 2 + 0.07, H / 2 + 0.07).lineTo(-W / 2 - 0.07, H / 2 + 0.07);
+  shape.holes.push(new THREE.Path().moveTo(-W / 2, -H / 2).lineTo(-W / 2, H / 2).lineTo(W / 2, H / 2).lineTo(W / 2, -H / 2));
+  const frame = new THREE.Mesh(new THREE.ExtrudeGeometry(shape, { depth: 0.02, bevelEnabled: true, bevelThickness: 0.02, bevelSize: 0.018, bevelSegments: 4 }),
+    new THREE.MeshStandardMaterial({ color: '#c9a042', metalness: 0.9, roughness: 0.28 }));
+  frame.position.z = -0.015;
+  frame.castShadow = true;
+  painting.add(frame);
+  // a picture light over it
+  const lamp = new THREE.SpotLight('#ffe2b0', 6, 2, 0.7, 0.6, 1.5);
+  lamp.position.set(0, 2.05, 0.35);
+  lamp.target = painting;
+  scene.add(lamp);
+
+  // the other characters of Wireface 2D's catalogue
+  let line = { id: 'eleanor', cues: [[0, 'calm'], [4.42, 'happy']] };
+  await screen.ready;
+  for (const c of await screen.face.catalogue()) {
+    const b = document.createElement('button');
+    b.textContent = `${c.name} (${c.style})`;
+    b.onclick = async () => {
+      document.querySelectorAll('#pictures button').forEach(x => x.classList.toggle('on', x === b));
+      await screen.useCharacter(c.id, { transition: 0.9 });
+      line = c;
+    };
+    document.querySelector('#pictures').append(b);
+  }
+  const caption = document.querySelector('#caption');
+  document.querySelector('#talk').onclick = async () => {
+    const audioContext = unlockAudio();             // on the click itself, before anything is awaited
+    const clip = await screen.clip(line.id, voices('2d'));
+    for (const [at, mood] of line.cues || []) setTimeout(() => screen.express(mood, 3), at * 1000);
+    await screen.say(clip, { audioContext, onCaption: t => (caption.textContent = t) });
+  };
+</script>

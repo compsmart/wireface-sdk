@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="en">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Wireface 2D: teeth</title>
+<link rel="icon" href="../../assets/brand/mark.svg" type="image/svg+xml">
+<link rel="stylesheet" href="example.css">
+<div class="stage"><canvas></canvas></div>
+<aside>
+  <h1>Teeth</h1>
+  <p>Three ways to fill the mouth: <b>rendered</b> teeth (modelled, lit or flat), a <b>picture</b> of teeth (Wireface Core's photographic sets, or ones drawn to match an art style), or <b>none</b>. "auto" picks by the character's art style.</p>
+  <select id="who" aria-label="Character"></select>
+  <div class="row" id="modes"></div>
+  <div class="thumbs" id="styles"></div>
+  <pre id="code"></pre>
+</aside>
+<script type="module">
+  import { createFace2d, TEETH_STYLES } from '../../dist/2d.js';
+  import { teethAsset } from '../../dist/2d.js';
+
+  const face = createFace2d(document.querySelector('canvas'), { config: { framing: 'face', zoom: 1.4 } });
+  const who = document.getElementById('who');
+  for (const c of await face.catalogue()) who.append(new Option(`${c.name} (${c.styleLabel})`, c.id));
+  who.value = 'vee';
+  who.onchange = () => face.useCharacter(who.value);
+  await face.useCharacter('vee', { transition: 0 });
+
+  // hold the mouth open so the teeth show: a stand-in mouth timeline (speech would drive it normally)
+  face.view.timeline = { sample: () => ({ jaw: 0.7, wide: 0.4, energy: 0.6 }), add() {}, flush() {}, setClock() {} };
+
+  const modes = document.getElementById('modes'), styles = document.getElementById('styles');
+  const mark = () => {                                        // what's on: the mode, and the teeth picture if it's one
+    const { teeth_mode: mode, teeth_style: style } = face.config;
+    for (const b of modes.children) b.classList.toggle('on', b.dataset.v === mode);
+    for (const b of styles.children) b.classList.toggle('on', mode === 'asset' && b.dataset.v === style);
+    for (const b of [...modes.children, ...styles.children]) b.setAttribute('aria-pressed', String(b.classList.contains('on')));
+  };
+  const show = patch => {
+    face.set(patch);
+    document.getElementById('code').textContent = `face.set(${JSON.stringify(patch)});`;
+    mark();
+  };
+  for (const mode of ['auto', 'rendered', 'asset', 'none']) {
+    const b = document.createElement('button');
+    b.textContent = mode;
+    b.dataset.v = mode;
+    b.onclick = () => show({ teeth_mode: mode });
+    modes.append(b);
+  }
+  for (const [id, label] of TEETH_STYLES) {
+    const b = document.createElement('button');
+    b.title = label;
+    b.dataset.v = id;
+    b.innerHTML = `<img src="${teethAsset(id).url}" alt="${label}" style="object-fit:contain;background:#2a1016">`;
+    b.onclick = () => show({ teeth_mode: 'asset', teeth_style: id });
+    styles.append(b);
+  }
+  mark();
+</script>

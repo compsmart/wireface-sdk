@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="en">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Wireface: a skin from your photo</title>
+<link rel="icon" href="../../assets/brand/mark.svg" type="image/svg+xml">
+<link rel="stylesheet" href="example.css">
+<canvas></canvas>
+<aside>
+  <h1>Your own skin</h1>
+  <p>Pick a photo of a face, straight on, mouth closed. MediaPipe finds the landmarks in your browser (it loads from a
+    CDN the first time); nothing is uploaded. Then save the skin to use it anywhere.</p>
+  <input type="file" id="file" accept="image/*">
+  <p id="status"></p>
+  <div class="row"><button id="save" disabled>Save the skin</button></div>
+  <pre id="code">face.useSkin({ image: 'me.jpg', landmarks: 'me.json' })</pre>
+  <p><a href="./">All examples</a></p>
+</aside>
+<script type="module">
+  import { createFace, skinFromPhoto } from '../../dist/wireface.js';
+
+  const face = createFace(document.querySelector('canvas'));
+  const status = document.getElementById('status');
+  let skin = null;
+
+  document.getElementById('file').onchange = async e => {
+    const file = e.target.files[0];
+    if (!file) return;
+    status.textContent = 'Finding the face...';
+    status.className = '';
+    try {
+      skin = await skinFromPhoto(file);
+      await face.useSkin(skin, { sweep: 1.4 });
+      status.textContent = `Found it (${skin.width} x ${skin.height}).`;
+      document.getElementById('save').disabled = false;
+    } catch (err) {
+      status.textContent = err.message;
+      status.className = 'error';
+    }
+  };
+
+  const download = (blob, name) => {
+    const a = Object.assign(document.createElement('a'), { href: URL.createObjectURL(blob), download: name });
+    a.click();
+    setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+  };
+  document.getElementById('save').onclick = () => {
+    download(skin.image, 'me.jpg');
+    download(new Blob([JSON.stringify(skin.landmarks)], { type: 'application/json' }), 'me.json');
+  };
+</script>

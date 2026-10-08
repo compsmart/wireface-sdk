@@ -1,0 +1,168 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://wireface.dev/schema/face2d.schema.json",
+  "title": "Wireface 2D settings",
+  "description": "A 2D face's settings, for createFace2d(canvas, { config }) or face.set(). Every key is optional; anything left out keeps its default. \"auto\" follows the character's art style.",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "$schema": {
+      "type": "string"
+    },
+    "character": {
+      "description": "A character's id from assets/characters/characters.json, or null.",
+      "type": [
+        "string",
+        "null"
+      ],
+      "pattern": "^[a-z0-9][a-z0-9_-]{0,39}$",
+      "default": null
+    },
+    "framing": {
+      "description": "contain: all of the picture; cover: fill the canvas; face: close on the face.",
+      "enum": [
+        "contain",
+        "cover",
+        "face"
+      ],
+      "default": "contain"
+    },
+    "zoom": {
+      "type": "number",
+      "minimum": 0.5,
+      "maximum": 3,
+      "default": 1
+    },
+    "depth": {
+      "description": "How far the head turns in 3D: 0 (flat) to 1, or auto.",
+      "oneOf": [
+        {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        },
+        {
+          "const": "auto"
+        }
+      ],
+      "default": "auto"
+    },
+    "edge_pin": {
+      "description": "How firmly the face's outline holds to the picture behind it.",
+      "type": "number",
+      "minimum": 0,
+      "maximum": 1,
+      "default": 0.7
+    },
+    "feather": {
+      "description": "How soft the face's edge is, in eye-widths.",
+      "type": "number",
+      "minimum": 0,
+      "maximum": 1,
+      "default": 0.35
+    },
+    "shading": {
+      "description": "lit: 3D lighting as the head turns; flat: none (drawings); auto: by art style.",
+      "enum": [
+        "auto",
+        "lit",
+        "flat"
+      ],
+      "default": "auto"
+    },
+    "smoothing": {
+      "description": "smooth, or pixel (no blur, for pixel art); auto: by art style.",
+      "enum": [
+        "auto",
+        "smooth",
+        "pixel"
+      ],
+      "default": "auto"
+    },
+    "teeth_mode": {
+      "description": "rendered teeth, a picture of teeth (asset), none, or auto (by art style).",
+      "enum": [
+        "auto",
+        "rendered",
+        "asset",
+        "none"
+      ],
+      "default": "auto"
+    },
+    "teeth_style": {
+      "description": "Which teeth picture, in asset mode.",
+      "enum": [
+        "auto",
+        "normal",
+        "braces",
+        "vampire",
+        "goofy",
+        "sharp",
+        "turkey",
+        "anime",
+        "cartoon",
+        "clay",
+        "comic",
+        "pixel",
+        "sketch"
+      ],
+      "default": "auto"
+    },
+    "teeth_width": {
+      "type": "number",
+      "minimum": 0.5,
+      "maximum": 1.5,
+      "default": 1
+    },
+    "teeth_size": {
+      "type": "number",
+      "minimum": 0.5,
+      "maximum": 1.5,
+      "default": 1
+    },
+    "mouth_color": {
+      "description": "The inside of the mouth: #rrggbb, or auto (from the character's lips).",
+      "type": "string",
+      "pattern": "^(auto|#[0-9a-fA-F]{6})$",
+      "default": "auto"
+    },
+    "follow_mouse": {
+      "description": "The head turns a little towards the pointer.",
+      "type": "boolean",
+      "default": true
+    },
+    "motion": {
+      "description": "Idle head motion.",
+      "type": "number",
+      "minimum": 0,
+      "maximum": 2,
+      "default": 1
+    },
+    "expressiveness": {
+      "description": "How strongly expressions and gestures show.",
+      "type": "number",
+      "minimum": 0,
+      "maximum": 2,
+      "default": 1
+    },
+    "mouth_gain": {
+      "description": "Lip-sync amplitude.",
+      "type": "number",
+      "minimum": 0.3,
+      "maximum": 2,
+      "default": 1
+    },
+    "sync_offset_ms": {
+      "description": "Positive: the mouth moves later.",
+      "type": "integer",
+      "minimum": -200,
+      "maximum": 200,
+      "default": 0
+    },
+    "show_mesh": {
+      "description": "Draw the fitted mesh over the face.",
+      "type": "boolean",
+      "default": false
+    }
+  }
+}

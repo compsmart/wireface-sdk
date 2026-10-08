@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="en">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Wireface: live lip sync</title>
+<link rel="icon" href="../../assets/brand/mark.svg" type="image/svg+xml">
+<link rel="stylesheet" href="example.css">
+<canvas></canvas>
+<aside>
+  <h1>Live lip sync</h1>
+  <p>Mouth shapes from any audio as it plays: your microphone, an audio file, a WebRTC call or streaming TTS. It reads
+    loudness and where the energy sits in the spectrum, so it's approximate; recorded clips with a mouth track look
+    better.</p>
+  <div class="row"><button id="mic">Use my microphone</button></div>
+  <p>Or play an audio file:</p>
+  <input type="file" id="file" accept="audio/*">
+  <audio id="player" controls style="width:100%"></audio>
+  <p id="note"></p>
+  <p><a href="./">All examples</a></p>
+</aside>
+<script type="module">
+  import { createFace } from '../../dist/wireface.js';
+
+  const face = createFace(document.querySelector('canvas'));
+  face.useSkin('marcus');
+  let ctx = null, stop = null;
+  const audioContext = () => (ctx ??= new AudioContext());
+
+  document.getElementById('mic').onclick = async e => {
+    if (stop) { stop(); stop = null; e.target.textContent = 'Use my microphone'; return; }
+    e.target.disabled = true;                                          // one microphone at a time
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      const stopLips = face.listenTo(audioContext(), stream);
+      stop = () => {
+        stopLips();
+        for (const track of stream.getTracks()) track.stop();          // the microphone is off, not just unheard
+      };
+      e.target.textContent = 'Stop';
+    } catch (err) {
+      document.getElementById('note').textContent = `No microphone: ${err.message}`;
+    }
+    e.target.disabled = false;
+  };
+
+  // the file moves the mouth while it plays (the microphone, started later, takes over until it stops)
+  const player = document.getElementById('player');
+  let stopFile = null;
+  player.onplay = () => { stopFile ??= face.listenTo(audioContext(), player); };
+  player.onpause = player.onended = () => { stopFile?.(); stopFile = null; };
+  document.getElementById('file').onchange = e => {
+    const file = e.target.files[0];
+    if (!file) return;
+    if (player.src) URL.revokeObjectURL(player.src);
+    player.src = URL.createObjectURL(file);
+    audioContext().resume();
+    player.play();
+  };
+</script>

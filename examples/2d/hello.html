@@ -1,0 +1,16 @@
+<!doctype html>
+<html lang="en">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Wireface 2D: hello</title>
+<link rel="icon" href="../../assets/brand/mark.svg" type="image/svg+xml">
+<style>html, body { margin: 0; height: 100%; background: #060b18; } canvas { display: block; width: 100%; height: 100%; }</style>
+<canvas></canvas>
+<script type="module">
+  // The smallest Wireface 2D: a ready-made character that blinks, breathes, turns towards the pointer and smiles.
+  import { createFace2d } from '../../dist/2d.js';
+
+  const face = createFace2d(document.querySelector('canvas'));
+  await face.useCharacter('pip');
+  face.express('happy', 3);
+</script>

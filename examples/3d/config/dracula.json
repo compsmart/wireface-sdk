@@ -1,0 +1,7 @@
+{
+  "$schema": "../face.schema.json",
+  "skin": "dracula",
+  "teeth_style": "vampire",
+  "teeth_size": 1.2,
+  "motion": 0.7
+}

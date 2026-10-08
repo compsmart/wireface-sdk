@@ -1,0 +1,15 @@
+<!doctype html>
+<html lang="en">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Wireface: hello</title>
+<link rel="icon" href="../../assets/brand/mark.svg" type="image/svg+xml">
+<style>html, body { margin: 0; height: 100%; background: #060b18; } canvas { display: block; width: 100%; height: 100%; }</style>
+<canvas></canvas>
+<script type="module">
+  // The smallest Wireface: a wireframe face that follows the pointer, blinks and smiles.
+  import { createFace } from '../../dist/wireface.js';
+
+  const face = createFace(document.querySelector('canvas'));
+  face.express('happy', 3);
+</script>

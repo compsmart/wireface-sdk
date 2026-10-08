@@ -1,0 +1,89 @@
+<!doctype html>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Wireface three.js: talk with a character</title>
+<link rel="stylesheet" href="example.css">
+<script type="importmap">
+{ "imports": {
+  "three": "../../node_modules/three/build/three.module.js",
+  "three/addons/": "../../node_modules/three/examples/jsm/",
+  "@wireface/sdk": "../../dist/wireface.js",
+  "@wireface/sdk/2d": "../../dist/2d.js",
+  "@wireface/sdk/2d/live": "../../dist/2d-live.js",
+  "@wireface/sdk/three": "../../dist/three.js",
+  "@wireface/sdk/three/characters": "../../dist/three-characters.js",
+  "@wireface/sdk/three/kit": "../../dist/three-kit.js"
+} }
+</script>
+<canvas></canvas>
+<aside>
+  <a class="back" href="./">&larr; examples</a>
+  <h1>Talk with a character</h1>
+  <p>A live conversation with Gemini Live, through Wireface 2D's <code>Conversation</code>, which drives any face: here
+    a three.js character. Its replies stream in as audio, lip-synced as they play, and the model shows its feelings on
+    the face with an <code>express</code> tool.</p>
+  <p id="needs">This needs a Gemini API key on the dev server: put <code>GEMINI_API_KEY=...</code> in
+    <code>.env</code> and run <code>npm start</code> again. The key stays in the server; the page asks it for a one-use
+    token.</p>
+  <div class="row"><select id="who"></select><button id="start">Start talking</button><button id="mic" disabled>Mic on</button><button id="end" disabled>End</button></div>
+  <div class="row"><input id="text" placeholder="Or type here, and press Enter" style="flex: 1; font: inherit; padding: 7px 10px; border-radius: 8px; border: 1px solid var(--line); background: #0a1226; color: var(--text);" disabled></div>
+  <p id="state"></p>
+  <div class="caption" id="caption"></div>
+  <pre>const talk = new Conversation(character.face, {
+  audio: () => unlockAudio(),
+  character: () => ({ name: 'Unit-7', voice: 'Puck',
+    persona: 'You are Unit-7, a cheerful robot...' }),
+  onCaption: ({ who, text }) => ...,
+});
+await talk.start();
+talk.setMic(true);</pre>
+</aside>
+<script type="module">
+  import { unlockAudio } from '@wireface/sdk/three';
+  import { buildCharacter } from '@wireface/sdk/three/characters';
+  import { Conversation } from '@wireface/sdk/2d/live';
+  import { stage } from './stage.js';
+
+  const PEOPLE = {
+    unit7: { voice: 'Puck', persona: 'You are Unit-7, a cheerful little robot on a theatre stage. You love electricity, puns and tidy databases. Keep replies short and playful.' },
+    dracula: { voice: 'Charon', persona: 'You are Count Dracula, gracious, theatrical and a little sinister, performing in a toy theatre. You never sleep. Keep replies short.' },
+    mei: { voice: 'Leda', persona: 'You are Mei, a friendly designer who works with AI agents. You are warm, curious and quick to laugh. Keep replies short.' },
+    grub: { voice: 'Fenrir', persona: 'You are Grub, a big soft-hearted ogre who pretends to be scary but loves a chat. Keep replies short.' },
+  };
+  const { scene, camera, onFrame } = stage({ camera: [0.2, 1.0, 1.9], target: [0, 0.85, 0] });
+  let current = null;
+  const show = id => {
+    current?.dispose();
+    current = buildCharacter(id);
+    scene.add(current.root);
+    current.gazeAt(camera);
+  };
+  onFrame((dt, t) => current?.update(dt, t));
+  const who = document.querySelector('#who');
+  for (const id of Object.keys(PEOPLE)) who.add(new Option(id === 'unit7' ? 'Unit-7' : id[0].toUpperCase() + id.slice(1), id));
+  who.onchange = () => { talk?.end(); show(who.value); };
+  show('unit7');
+
+  // is there a server to ask for tokens?
+  fetch('/api/status').then(r => r.json()).then(s => { document.querySelector('#needs').hidden = !!s.gemini; }).catch(() => {});
+
+  let talk = null;
+  const $ = s => document.querySelector(s);
+  $('#start').onclick = async () => {
+    const audioContext = unlockAudio();             // on the click itself, before the token is fetched
+    talk = new Conversation(current.face, {
+      audio: () => audioContext,
+      character: () => ({ name: current.name, ...PEOPLE[current.id] }),
+      onState: ({ state, detail }) => {
+        $('#state').textContent = detail || state;
+        const live = !['off', 'ended', 'error'].includes(state);
+        $('#start').disabled = live; $('#end').disabled = !live; $('#mic').disabled = !live; $('#text').disabled = !live;
+      },
+      onCaption: ({ who: w, text }) => { $('#caption').textContent = text ? `${w === 'you' ? 'You' : current.name}: ${text}` : ''; },
+    });
+    try { await talk.start(); } catch (e) { $('#state').textContent = e.message; $('#state').className = 'error'; }
+  };
+  $('#mic').onclick = e => { const on = !e.target.classList.contains('on'); e.target.classList.toggle('on', on); talk?.setMic(on); };
+  $('#end').onclick = () => talk?.end();
+  $('#text').onkeydown = e => { if (e.key === 'Enter' && e.target.value.trim()) { talk?.send(e.target.value.trim()); e.target.value = ''; } };
+</script>

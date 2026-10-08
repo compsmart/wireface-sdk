@@ -1,0 +1,178 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://wireface.dev/schema/face.schema.json",
+  "title": "Wireface face config",
+  "description": "How a Wireface face looks and moves. Every setting is optional; missing ones take their defaults (src/config.js).",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "$schema": {
+      "type": "string"
+    },
+    "skin": {
+      "description": "A skin id from assets/skins/skins.json, worn in photo style; null for none.",
+      "type": [
+        "string",
+        "null"
+      ],
+      "pattern": "^[a-z0-9][a-z0-9_-]{0,39}$"
+    },
+    "style": {
+      "description": "hologram: the glowing wireframe; sculpt: a shaded head; photo: the skin.",
+      "enum": [
+        "hologram",
+        "sculpt",
+        "photo"
+      ]
+    },
+    "preset": {
+      "description": "A colour set: sets primary, secondary and background.",
+      "enum": [
+        "cyan",
+        "ember",
+        "green",
+        "amber",
+        "violet",
+        "rose",
+        "ice"
+      ]
+    },
+    "colors": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "primary": {
+          "$ref": "#/$defs/color",
+          "description": "the wireframe and its glow"
+        },
+        "secondary": {
+          "$ref": "#/$defs/color",
+          "description": "the rim light"
+        },
+        "background": {
+          "$ref": "#/$defs/color",
+          "description": "for pages that want a matching background (the canvas is transparent)"
+        },
+        "skin": {
+          "$ref": "#/$defs/color",
+          "description": "sculpt style's skin"
+        },
+        "iris": {
+          "$ref": "#/$defs/color",
+          "description": "eye colour (photo skins use their own)"
+        },
+        "lips": {
+          "$ref": "#/$defs/color"
+        },
+        "mouth": {
+          "$ref": "#/$defs/color",
+          "description": "inside the mouth"
+        }
+      }
+    },
+    "skin_amount": {
+      "description": "Wireframe (0) to skin (1): a cross-fade from the glowing wireframe to the skin (or the sculpted style), over the whole face. A new value glides in; the skin barely glows (a tenth of the glow).",
+      "type": "number",
+      "minimum": 0,
+      "maximum": 1
+    },
+    "glow": {
+      "description": "Bloom around the wireframe.",
+      "type": "number",
+      "minimum": 0,
+      "maximum": 2
+    },
+    "wire": {
+      "description": "Wireframe line strength (hologram).",
+      "type": "number",
+      "minimum": 0,
+      "maximum": 1
+    },
+    "fill": {
+      "description": "Surface fill (hologram).",
+      "type": "number",
+      "minimum": 0,
+      "maximum": 1
+    },
+    "scanlines": {
+      "type": "number",
+      "minimum": 0,
+      "maximum": 1
+    },
+    "points": {
+      "description": "Vertex dots.",
+      "type": "number",
+      "minimum": 0,
+      "maximum": 1
+    },
+    "edge_fade": {
+      "description": "Soft edge around the face.",
+      "type": "number",
+      "minimum": 0,
+      "maximum": 1
+    },
+    "eyes": {
+      "description": "Eyeballs with irises (false: hollow hologram eyes).",
+      "type": "boolean"
+    },
+    "teeth_style": {
+      "enum": [
+        "normal",
+        "braces",
+        "vampire",
+        "goofy",
+        "sharp",
+        "turkey"
+      ]
+    },
+    "teeth_width": {
+      "type": "number",
+      "minimum": 0.5,
+      "maximum": 1.5
+    },
+    "teeth_size": {
+      "type": "number",
+      "minimum": 0.5,
+      "maximum": 1.5
+    },
+    "follow_mouse": {
+      "description": "Eyes and head follow the pointer.",
+      "type": "boolean"
+    },
+    "motion": {
+      "description": "Idle head motion.",
+      "type": "number",
+      "minimum": 0,
+      "maximum": 2
+    },
+    "expressiveness": {
+      "description": "How strongly expressions and gestures show.",
+      "type": "number",
+      "minimum": 0,
+      "maximum": 2
+    },
+    "mouth_gain": {
+      "description": "Lip-sync amplitude.",
+      "type": "number",
+      "minimum": 0.3,
+      "maximum": 2
+    },
+    "sync_offset_ms": {
+      "description": "Positive: the mouth moves later than the sound.",
+      "type": "integer",
+      "minimum": -200,
+      "maximum": 200
+    },
+    "zoom": {
+      "type": "number",
+      "minimum": 0.5,
+      "maximum": 2
+    }
+  },
+  "$defs": {
+    "color": {
+      "type": "string",
+      "pattern": "^#[0-9a-fA-F]{6}$"
+    }
+  }
+}

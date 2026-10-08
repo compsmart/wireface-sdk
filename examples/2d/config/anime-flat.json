@@ -1,0 +1,9 @@
+{
+  "$schema": "../face2d.schema.json",
+  "character": "sora",
+  "framing": "face",
+  "depth": 0,
+  "shading": "flat",
+  "teeth_mode": "asset",
+  "teeth_style": "anime"
+}

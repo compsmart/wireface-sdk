@@ -1,0 +1,78 @@
+<!doctype html>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Wireface three.js: expressions</title>
+<link rel="stylesheet" href="example.css">
+<script type="importmap">
+{ "imports": {
+  "three": "../../node_modules/three/build/three.module.js",
+  "three/addons/": "../../node_modules/three/examples/jsm/",
+  "@wireface/sdk": "../../dist/wireface.js",
+  "@wireface/sdk/2d": "../../dist/2d.js",
+  "@wireface/sdk/2d/live": "../../dist/2d-live.js",
+  "@wireface/sdk/three": "../../dist/three.js",
+  "@wireface/sdk/three/characters": "../../dist/three-characters.js",
+  "@wireface/sdk/three/kit": "../../dist/three-kit.js"
+} }
+</script>
+<canvas></canvas>
+<aside>
+  <a class="back" href="./">&larr; examples</a>
+  <h1>Expressions</h1>
+  <p>Fifteen moods, shown for a few seconds with <code>face.express()</code> or worn standing with
+    <code>face.mood()</code>; states that change the eyes and posture; and your own expressions, made from the rig's
+    channels with <code>defineExpression()</code>.</p>
+  <h2>express(name)</h2>
+  <div class="row" id="moods"></div>
+  <h2>mood(name, 0.6): worn when nothing else shows</h2>
+  <div class="row" id="standing"></div>
+  <h2>state(name)</h2>
+  <div class="row" id="states"></div>
+  <h2>Your own: defineExpression('mine', ...)</h2>
+  <div id="sliders"></div>
+  <div class="row"><button id="mine">express('mine')</button><button id="wink">express('wink')</button></div>
+  <pre id="code"></pre>
+</aside>
+<script type="module">
+  import { FaceMesh, MOODS, defineExpression } from '@wireface/sdk/three';
+  import { hairCap, hairFall, clay } from '@wireface/sdk/three/kit';
+  import { stage } from './stage.js';
+
+  const { scene, camera } = stage({ camera: [0, 1.12, 0.95], target: [0, 1.1, 0], floor: false });
+  const face = new FaceMesh({ skin: 'lucia', size: 0.24 });
+  face.position.y = 1.1;
+  scene.add(face);
+  const hair = clay('#3b2416', { roughness: 0.5 });
+  hairCap(face, hair, { front: 0.3 });
+  hairFall(face, hair, { length: 1.4 });
+  face.gazeAt(camera);
+
+  const button = (where, label, fn) => {
+    const b = document.createElement('button');
+    b.textContent = label;
+    b.onclick = () => { fn(); document.querySelectorAll(`${where} button`).forEach(x => x.classList.toggle('on', x === b)); };
+    document.querySelector(where).append(b);
+  };
+  for (const m of MOODS) button('#moods', m, () => face.express(m, 4));
+  for (const m of ['none', 'content', 'sad', 'curious', 'bored']) button('#standing', m, () => face.mood(m === 'none' ? null : m, 0.6));
+  for (const s of ['idle', 'thinking', 'busy', 'muted', 'asleep']) button('#states', s, () => face.state(s));
+
+  // a wink, and one of your own from sliders
+  defineExpression('wink', { blinkL: 1, smileL: 0.45, smileR: 0.7, browUpR: 0.3 });
+  const channels = { smileL: 0.6, smileR: 0.2, browUpL: 0.5, browDown: 0, squintR: 0.4, pout: 0, jaw: 0.15, sneer: 0 };
+  const code = document.querySelector('#code');
+  const define = () => {
+    defineExpression('mine', channels);
+    code.textContent = `defineExpression('mine', ${JSON.stringify(channels, null, 1).replace(/\n\s*/g, ' ')});\nface.express('mine', 5);`;
+  };
+  for (const [ch, v] of Object.entries(channels)) {
+    const label = document.createElement('label');
+    label.className = 'slider';
+    label.innerHTML = `<span style="width:72px">${ch}</span><input type="range" min="0" max="1" step="0.05" value="${v}">`;
+    label.querySelector('input').oninput = e => { channels[ch] = +e.target.value; define(); face.express('mine', 5); };
+    document.querySelector('#sliders').append(label);
+  }
+  define();
+  document.querySelector('#mine').onclick = () => face.express('mine', 5);
+  document.querySelector('#wink').onclick = () => face.express('wink', 2);
+</script>

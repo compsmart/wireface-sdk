@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="en">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Wireface: skins</title>
+<link rel="icon" href="../../assets/brand/mark.svg" type="image/svg+xml">
+<link rel="stylesheet" href="example.css">
+<canvas></canvas>
+<aside>
+  <h1>Skins</h1>
+  <p>Each skin is a photo plus where its 468 face landmarks are. Click one: it sweeps down onto the wireframe. Robot,
+    monster and Dracula bring their own teeth.</p>
+  <div class="thumbs" id="skins"></div>
+  <p>Slide between the two: a cross-fade, with the wireframe's glow fading as the skin comes in.</p>
+  <label class="blend">Wireframe <input type="range" id="amount" min="0" max="1" step="0.01" value="1"> Skin</label>
+  <pre id="code">face.set({ skin_amount: 1 })</pre>
+  <p><a href="./">All examples</a></p>
+</aside>
+<script type="module">
+  import { createFace, catalogue, ASSETS } from '../../dist/wireface.js';
+
+  const face = createFace(document.querySelector('canvas'));
+  const box = document.getElementById('skins');
+  const skins = await catalogue(ASSETS);
+  for (const skin of skins) {
+    const b = document.createElement('button');
+    b.title = `${skin.name} (${skin.teeth} teeth)`;
+    b.innerHTML = `<img src="${skin.thumb}" alt="${skin.name}">`;
+    b.onclick = () => face.useSkin(skin.id, { sweep: 1.4 });     // as much of it as skin_amount shows
+    box.append(b);
+  }
+  face.useSkin(skins[0].id, { sweep: 1.4 });
+
+  // 0 is the bare wireframe, 1 the whole skin; a new value glides in
+  const amount = document.getElementById('amount');
+  amount.oninput = () => {
+    face.set({ skin_amount: +amount.value });
+    document.getElementById('code').textContent = `face.set({ skin_amount: ${amount.value} })`;
+  };
+</script>

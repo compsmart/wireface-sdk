@@ -1,0 +1,82 @@
+<!doctype html>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Wireface three.js: lip sync from a microphone</title>
+<link rel="stylesheet" href="example.css">
+<script type="importmap">
+{ "imports": {
+  "three": "../../node_modules/three/build/three.module.js",
+  "three/addons/": "../../node_modules/three/examples/jsm/",
+  "@wireface/sdk": "../../dist/wireface.js",
+  "@wireface/sdk/2d": "../../dist/2d.js",
+  "@wireface/sdk/2d/live": "../../dist/2d-live.js",
+  "@wireface/sdk/three": "../../dist/three.js",
+  "@wireface/sdk/three/characters": "../../dist/three-characters.js",
+  "@wireface/sdk/three/kit": "../../dist/three-kit.js"
+} }
+</script>
+<canvas></canvas>
+<aside>
+  <a class="back" href="./">&larr; examples</a>
+  <h1>Lip sync from a microphone</h1>
+  <p>Talk, and the robot says it. <code>face.listenTo()</code> reads the mouth from the sound as it plays (loudness
+    and spectrum, frame by frame), so it works for anything you don't have in advance: a microphone, a WebRTC call,
+    streaming text-to-speech in an <code>&lt;audio&gt;</code> element.</p>
+  <div class="row"><button id="mic">Start the microphone</button></div>
+  <label class="slider">Gain <input id="gain" type="range" min="0.3" max="2" step="0.05" value="1.2"></label>
+  <p id="status"></p>
+  <pre>const audioContext = unlockAudio();     // after a click
+const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+const stop = face.listenTo(audioContext, stream, { gain: 1.2 });
+// ...
+stop();</pre>
+  <p>Unit-7 comes from the cast: <code>buildCharacter('unit7')</code>. Its chest lights blink with
+    <code>face.level</code>.</p>
+</aside>
+<script type="module">
+  import { unlockAudio } from '@wireface/sdk/three';
+  import { buildCharacter } from '@wireface/sdk/three/characters';
+  import { stage } from './stage.js';
+
+  const { scene, camera, onFrame } = stage({ camera: [0.3, 1.0, 1.9], target: [0, 0.82, 0] });
+  const robot = buildCharacter('unit7');
+  scene.add(robot.root);
+  robot.gazeAt(camera);
+  onFrame((dt, t) => robot.update(dt, t));
+
+  let stop = null, stopLips = null, starting = false, gain = 1.2, audioContext = null, stream = null;
+  const status = document.querySelector('#status');
+  const start = async () => {
+    audioContext = unlockAudio();                   // on the click itself, before anything is awaited
+    stream = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: true, noiseSuppression: true } });
+    try {
+      stopLips = robot.face.listenTo(audioContext, stream, { gain });
+    } catch (err) {
+      stream.getTracks().forEach(t => t.stop());    // never leave the microphone on
+      throw err;
+    }
+    robot.face.express('curious', 2);
+    stop = () => { stopLips(); stream.getTracks().forEach(t => t.stop()); stop = stopLips = null; };
+  };
+  document.querySelector('#mic').onclick = async e => {
+    if (starting) return;
+    try {
+      if (stop) { stop(); e.target.textContent = 'Start the microphone'; status.textContent = ''; return; }
+      starting = true;
+      await start();
+      e.target.textContent = 'Stop';
+      status.textContent = 'Listening: say something.';
+      status.className = '';
+    } catch (err) {
+      status.textContent = `No microphone: ${err.message}`;
+      status.className = 'error';
+    } finally {
+      starting = false;
+    }
+  };
+  // a new gain: listen again to the same stream (the browser isn't asked for the microphone again)
+  document.querySelector('#gain').oninput = e => {
+    gain = +e.target.value;
+    if (stopLips) { stopLips(); stopLips = robot.face.listenTo(audioContext, stream, { gain }); }
+  };
+</script>

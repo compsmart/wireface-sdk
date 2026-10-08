@@ -1,0 +1,102 @@
+{
+  "name": "@wireface/sdk",
+  "version": "0.1.0",
+  "license": "SEE LICENSE IN LICENSE.md",
+  "description": "Talking, lip-synced faces for the web: a 3D face on a canvas, any picture of a face brought to life, and faces for three.js characters. Expressions, teeth, and lip sync from recorded clips, live audio or streamed speech.",
+  "homepage": "https://wireface.dev",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/compsmart/wireface-sdk.git"
+  },
+  "bugs": "https://github.com/compsmart/wireface-sdk/issues",
+  "type": "module",
+  "main": "./dist/wireface.js",
+  "types": "./types/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./types/index.d.ts",
+      "default": "./dist/wireface.js"
+    },
+    "./config": {
+      "types": "./types/config.d.ts",
+      "default": "./dist/config.js"
+    },
+    "./2d": {
+      "types": "./types/2d.d.ts",
+      "default": "./dist/2d.js"
+    },
+    "./2d/live": {
+      "types": "./types/2d-live.d.ts",
+      "default": "./dist/2d-live.js"
+    },
+    "./2d/config": {
+      "types": "./types/2d-config.d.ts",
+      "default": "./dist/2d-config.js"
+    },
+    "./2d/server": {
+      "types": "./types/2d-server.d.ts",
+      "default": "./dist/2d-server.js"
+    },
+    "./three": {
+      "types": "./types/three.d.ts",
+      "default": "./dist/three.js"
+    },
+    "./three/characters": {
+      "types": "./types/three-characters.d.ts",
+      "default": "./dist/three-characters.js"
+    },
+    "./three/kit": {
+      "types": "./types/three-kit.d.ts",
+      "default": "./dist/three-kit.js"
+    },
+    "./assets/*": "./assets/*",
+    "./face.schema.json": "./face.schema.json",
+    "./face2d.schema.json": "./face2d.schema.json",
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "dist",
+    "assets",
+    "types",
+    "face.schema.json",
+    "face2d.schema.json",
+    "README.md",
+    "LICENSE.md",
+    "NOTICE",
+    "licenses"
+  ],
+  "peerDependencies": {
+    "three": ">=0.160.0"
+  },
+  "peerDependenciesMeta": {
+    "three": {
+      "optional": true
+    }
+  },
+  "scripts": {
+    "start": "node tools/serve.mjs",
+    "test": "node --test test/*.test.js",
+    "build": "node tools/build.mjs",
+    "check": "node tools/check.mjs"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "keywords": [
+    "face",
+    "avatar",
+    "talking-head",
+    "lip-sync",
+    "webgl",
+    "three",
+    "agent",
+    "voice"
+  ],
+  "devDependencies": {
+    "@types/three": "^0.186.0",
+    "esbuild": "^0.28.2",
+    "playwright-core": "^1.64.0",
+    "three": "^0.186.1",
+    "typescript": "^7.0.2"
+  }
+}
