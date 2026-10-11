@@ -26,10 +26,10 @@
     const b = document.createElement('button');
     b.title = `${skin.name} (${skin.teeth} teeth)`;
     b.innerHTML = `<img src="${skin.thumb}" alt="${skin.name}">`;
-    b.onclick = () => face.useSkin(skin.id, { sweep: 1.4 });     // as much of it as skin_amount shows
+    b.onclick = () => face.useCharacter(skin.id, { transition: 0.5 });     // as much of it as skin_amount shows
     box.append(b);
   }
-  face.useSkin(skins[0].id, { sweep: 1.4 });
+  face.useCharacter(skins[0].id, { transition: 0.5 });
 
   // 0 is the bare wireframe, 1 the whole skin; a new value glides in
   const amount = document.getElementById('amount');

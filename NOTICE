@@ -1,14 +1,13 @@
-The Wireface SDK includes or uses:
+Wireface Engine. Copyright 2026 Compsmart. Wireface SDK Licence.
 
-- The MediaPipe canonical face model (canonical_face_model.obj), Copyright Google LLC, Apache License 2.0 (see
-  licenses/Apache-2.0.txt). https://github.com/google-ai-edge/mediapipe
-- MediaPipe Tasks Vision and the face landmarker model, loaded at runtime from jsDelivr and Google Cloud Storage
-  (skinFromPhoto, and finding faces in new pictures in 2D) unless you host them yourself, Apache License 2.0.
-- Google's Gemini models, for finding faces in new pictures, conversations and new characters in 2D: pictures and
-  speech go to Google only when you use those features, under your own API key and Google's terms.
-- assets/skins, assets/2d/characters and the teeth pictures in dist/teeth: made with AI image generation for
-  Wireface; face landmarks found with MediaPipe and Gemini.
-- assets/voices and assets/2d/voices: speech made with Gemini text-to-speech for Wireface.
-- three.js (https://threejs.org), MIT License, Copyright 2010-2026 three.js authors: a peer dependency, not included.
-- examples/three/models/RobotExpressive.glb: RobotExpressive by Tomas Laulhe, modified by Don McCurdy, CC0 1.0. From
-  the three.js examples (examples/models/gltf/RobotExpressive).
+MediaPipe canonical_face_model.obj: Copyright Google LLC, Apache License 2.0.
+https://github.com/google-ai-edge/mediapipe - see licenses/Apache-2.0.txt.
+Wireface modifies the canonical geometry to fit photos and generate baked expression data.
+Relevant character files retain these notices and the Apache licence text.
+
+Local photo mapping bundles MediaPipe Tasks Vision 1.0.1, CPU WASM and the face landmarker model under Apache-2.0. See assets/mediapipe/LICENSE and manifest.json.
+Optional cloud-assisted detection and conversation services use their providers' terms and charges.
+Catalogue portraits, character pictures and teeth were made using AI image generation for Wireface.
+Recorded catalogue speech was made using Gemini text-to-speech.
+three.js is an optional peer dependency, MIT, Copyright 2010-2026 three.js authors.
+The optional RobotExpressive example is by Tomas Laulhe, modified by Don McCurdy, CC0 1.0.

@@ -22,7 +22,7 @@
   import { createFace, defineExpression, MOODS } from '../../dist/wireface.js';
 
   const face = createFace(document.querySelector('canvas'));
-  await face.useSkin('amara');
+  await face.useCharacter('amara');
 
   // your own expressions: any of CHANNELS, each 0..1
   defineExpression('wink', { blinkL: 1, smileL: 0.35, smileR: 0.55, browUpR: 0.25, squintL: 0.3 });

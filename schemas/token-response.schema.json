@@ -1,0 +1,19 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://wireface.dev/schema/token-response.schema.json",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "token",
+    "expiresAt"
+  ],
+  "properties": {
+    "token": {
+      "type": "string"
+    },
+    "expiresAt": {
+      "type": "integer",
+      "description": "Unix seconds; tokens live for five minutes."
+    }
+  }
+}

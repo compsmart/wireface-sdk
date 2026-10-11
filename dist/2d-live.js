@@ -1,5 +1,5 @@
-/*! Wireface | Required Notice: Copyright 2026 Compsmart (https://wireface.dev) | Free for personal and non-commercial use; commercial licence: https://wireface.dev/license/ */
-import{l as d,z as p}from"./chunk-CLD3J3KR.js";import"./chunk-HERDWKRJ.js";var u="gemini-3.8-live",k=`You are a character in a picture, brought to life in a web browser by Wireface 2D: your face
+/*! Wireface | Required Notice: Copyright 2026 Compsmart (https://wireface.dev) | Free for personal and commercial use under the Wireface SDK Licence; https://wireface.dev/license/ */
+import{e as d,q as p}from"./chunk-UYOYII7K.js";import"./chunk-NHRPPR33.js";import"./chunk-AJE3PZZ5.js";var u="gemini-3.8-live",k=`You are a character in a picture, brought to life in a web browser by Wireface 2D: your face
 moves, blinks and lip-syncs as you talk. Everything you say is spoken aloud, so keep it brief and natural: one to three
 short sentences, plain words, no lists, no markdown. Stay in character and keep it friendly and suitable for everyone.
 You can't see the person, their screen or the web, and you don't remember anything after this conversation. Use the

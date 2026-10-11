@@ -34,7 +34,7 @@
     b.onclick = async () => {
       for (const timer of cues) clearTimeout(timer);                   // another clip's cues are no longer wanted
       const mine = cues = [];
-      await face.useSkin(c.id, { sweep: 1.2 });
+      await face.useCharacter(c.id, { transition: 0.5 });
       const clip = await face.clip(c.id);
       if (cues !== mine) return;                                       // another was picked meanwhile
       cues = c.cues.map(([at, name]) => setTimeout(() => face.express(name, clip.duration - at + 0.5), at * 1000));

@@ -9,7 +9,6 @@
     "EXPRESSIONS",
     "FaceView",
     "LiveLipSync",
-    "MEDIAPIPE",
     "MOODS",
     "MOUTH_CHANNELS",
     "MouthTracker",
@@ -25,8 +24,12 @@
     "loadClip",
     "playClip",
     "resolveExpression",
+    "validateConfig",
+    "loadCharacter",
+    "CHARACTER_VERSION",
+    "exportCharacter",
     "skinFromPhoto",
-    "validateConfig"
+    "MEDIAPIPE"
   ],
   "@wireface/sdk/config": [
     "ConfigError",
@@ -39,46 +42,36 @@
   ],
   "@wireface/sdk/2d": [
     "ALIASES",
-    "ANCHORS",
     "ART_STYLES",
     "ART_STYLE_IDS",
     "ASSETS",
     "CHANNELS",
     "CHOICES",
-    "CONTROLS",
     "ConfigError",
     "DEFAULTS",
     "DEFAULT_CONFIG",
-    "DETECT_MODELS",
-    "DetectionOverlay",
     "EXPRESSIONS",
     "FRAMINGS",
     "FaceView2D",
-    "KEYPOINTS",
     "LiveLipSync",
-    "MEDIAPIPE",
     "MOODS",
     "RANGES",
-    "STEPS",
     "StreamVoice",
     "TEETH_MODES",
     "TEETH_STYLES",
-    "VOICES",
     "Wireface2D",
     "artStyle",
     "catalogue",
-    "characterData",
-    "characterFromImage",
     "configDiff",
     "createFace2d",
     "defineExpression",
-    "detectFace",
     "loadCharacter",
     "loadClip",
     "playClip",
     "resolveExpression",
     "teethAsset",
-    "validateConfig"
+    "validateConfig",
+    "exportCharacter"
   ],
   "@wireface/sdk/2d/live": [
     "Conversation",
@@ -97,11 +90,6 @@
     "TEETH_MODES",
     "configDiff",
     "validateConfig"
-  ],
-  "@wireface/sdk/2d/server": [
-    "PERSONA",
-    "TOOLS",
-    "createApi"
   ],
   "@wireface/sdk/three": [
     "ALIASES",
@@ -141,11 +129,15 @@
     "setVoiceFolders",
     "shareExpressions",
     "skinColour",
-    "skinFromPhoto",
     "unlockAudio",
     "validateFaceConfig",
     "visorGeometry",
-    "voices"
+    "voices",
+    "loadCharacter",
+    "exportCharacter",
+    "skinFromPhoto",
+    "MEDIAPIPE",
+    "wrapGeometry"
   ],
   "@wireface/sdk/three/characters": [
     "CAST",
@@ -170,9 +162,14 @@
     "metal",
     "neck",
     "part",
+    "refit",
     "smoothLathe",
     "toyBody",
     "tube",
     "vinyl"
+  ],
+  "@wireface/sdk/rigging": [
+    "createRiggingClient",
+    "WirefaceError"
   ]
 }

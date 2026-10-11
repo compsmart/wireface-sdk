@@ -1,7 +1,7 @@
 [
  {
-  "id": "mei",
-  "name": "Mei",
+  "id": "sarah",
+  "name": "Sarah",
   "kind": "human",
   "teeth": "normal"
  },
@@ -51,7 +51,7 @@
   "id": "robot",
   "name": "Robot",
   "kind": "robot",
-  "teeth": "braces"
+  "teeth": "normal"
  },
  {
   "id": "monster",

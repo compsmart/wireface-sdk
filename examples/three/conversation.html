@@ -38,15 +38,19 @@
   import { stage } from './stage.js';
 
   const { scene, camera, onFrame } = stage({ camera: [0, 1.05, 2.3], target: [0, 0.82, 0], width: 1.5 });
-  const walter = buildCharacter('walter'), mei = buildCharacter('mei');
+  const walter = buildCharacter('walter'), sarah = buildCharacter('sarah');
+  // their lines for this scene, from this page's own (examples/voices/lines.json)
+  const lines = new URL('voices/', import.meta.url).href;
+  sarah.lineOverride = { id: 'sarah-to-walter', folder: lines, cues: [[0, 'curious']] };
+  walter.lineOverride = { id: 'walter-to-sarah', folder: lines, cues: [[0, 'amused']] };
   walter.root.position.set(-0.42, 0, 0);
   walter.root.rotation.y = 0.45;
-  mei.root.position.set(0.42, 0, 0);
-  mei.root.rotation.y = -0.45;
-  scene.add(walter.root, mei.root);
-  walter.gazeAt(mei.head);
-  mei.gazeAt(walter.head);
-  onFrame((dt, t) => { walter.update(dt, t); mei.update(dt, t); });
+  sarah.root.position.set(0.42, 0, 0);
+  sarah.root.rotation.y = -0.45;
+  scene.add(walter.root, sarah.root);
+  walter.gazeAt(sarah.head);
+  sarah.gazeAt(walter.head);
+  onFrame((dt, t) => { walter.update(dt, t); sarah.update(dt, t); });
 
   const caption = document.querySelector('#caption');
   async function line(speaker, listener, audioContext, reaction) {
@@ -67,8 +71,8 @@
   document.querySelector('#play').onclick = async e => {
     e.target.disabled = true;
     const audioContext = unlockAudio();
-    await line(mei, walter, audioContext, 'happy');
-    await line(walter, mei, audioContext, 'amused');
+    await line(sarah, walter, audioContext, 'happy');
+    await line(walter, sarah, audioContext, 'amused');
     caption.textContent = '';
     e.target.disabled = false;
   };

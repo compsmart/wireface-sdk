@@ -1,6 +1,0 @@
-{
-  "$schema": "../face.schema.json",
-  "skin": "mei",
-  "skin_amount": 0.6,
-  "preset": "cyan"
-}

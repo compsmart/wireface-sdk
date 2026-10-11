@@ -1,0 +1,27 @@
+<!doctype html>
+<html lang="en">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Wireface Engine — Runtime playback example</title>
+<link rel="stylesheet" href="playback.css">
+<script type="module" src="playback.js"></script>
+<main>
+  <p class="eyebrow">Independent example · runtime only</p>
+  <h1>A character. Your application.</h1>
+  <p>Load a .wireface.json exported by Creator. This application imports only the runtime. It needs no account or external service.</p>
+  <canvas aria-label="Animated character"></canvas>
+  <div class="controls">
+    <label>Character file <input id="character" type="file" accept=".wireface.json,application/json"></label>
+    <label>Expression <select id="expression"><option>neutral</option><option>happy</option><option>surprised</option><option>sad</option><option>curious</option></select></label>
+    <label>Audio file <input id="audio" type="file" accept="audio/*"></label>
+    <button id="pause" type="button" aria-pressed="false">Pause animation</button>
+  </div>
+  <p id="status" role="status" aria-live="polite">Loading Sarah…</p>
+  <pre><code>import { createFace, loadCharacter } from '@wireface/sdk';
+const face = createFace(canvas);
+await face.useCharacter(await loadCharacter('/characters/sarah.wireface.json'));
+face.express('happy');
+face.listenTo(audioContext, audioSource);</code></pre>
+  <p><a href="https://wireface.dev/docs/engine/">Deployment guide</a> · <a href="https://wireface.dev/license/">Licence</a></p>
+</main>
+</html>

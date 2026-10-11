@@ -36,7 +36,11 @@ await screen.useCharacter('hazel', { transition: 0.9 });</pre>
 </aside>
 <script type="module">
   import * as THREE from 'three';
-  import { FaceScreen, screenGeometry, unlockAudio, voices } from '@wireface/sdk/three';
+  import { FaceScreen, screenGeometry, unlockAudio } from '@wireface/sdk/three';
+  const lines = new URL('voices/', import.meta.url).href;   // this page's own lines (examples/voices/lines.json)
+  // each picture's own line (portrait-<id>), and the feeling it's said with
+  const MOODS = { ava: 'amused', pip: 'excited', sora: 'happy', mabel: 'amused', rex: 'excited', eleanor: 'amused',
+    hazel: 'happy', theo: 'sad', kit: 'excited', gus: 'amused', vee: 'calm', fern: 'calm', bolt: 'calm' };
   import { stage } from './stage.js';
 
   const { scene, camera } = stage({ camera: [0.6, 1.5, 1.7], target: [0, 1.5, 0], background: '#1a1410' });
@@ -69,7 +73,7 @@ await screen.useCharacter('hazel', { transition: 0.9 });</pre>
   scene.add(lamp);
 
   // the other characters of Wireface 2D's catalogue
-  let line = { id: 'eleanor', cues: [[0, 'calm'], [4.42, 'happy']] };
+  let line = { id: 'eleanor' };
   await screen.ready;
   for (const c of await screen.face.catalogue()) {
     const b = document.createElement('button');
@@ -84,8 +88,8 @@ await screen.useCharacter('hazel', { transition: 0.9 });</pre>
   const caption = document.querySelector('#caption');
   document.querySelector('#talk').onclick = async () => {
     const audioContext = unlockAudio();             // on the click itself, before anything is awaited
-    const clip = await screen.clip(line.id, voices('2d'));
-    for (const [at, mood] of line.cues || []) setTimeout(() => screen.express(mood, 3), at * 1000);
+    const clip = await screen.clip(`portrait-${line.id}`, lines);
+    screen.express(MOODS[line.id] || 'happy', clip.duration);
     await screen.say(clip, { audioContext, onCaption: t => (caption.textContent = t) });
   };
 </script>

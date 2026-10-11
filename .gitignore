@@ -3,3 +3,6 @@ node_modules/
 *.log
 /.build/
 /shots/
+
+/release/
+/.source/

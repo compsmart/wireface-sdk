@@ -125,3 +125,6 @@ export declare function toyBody(character: Character, options?: {
 export declare function neck(character: Character, skin: Material, from: number, headY: number, radius?: number): void;
 /** An empty head group at `y`: the face goes in it, and it's what nods and turns. */
 export declare function headAt(character: Character, y: number): Group;
+
+/** Update a part now and whenever its face changes skin. */
+export declare function refit(face: FaceMesh, fit: () => void): void;

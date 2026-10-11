@@ -51,8 +51,8 @@
   head.position.y = 1.08;
   scene.add(head);
 
-  // The face: Mei's photo skin on a 24 cm face, which makes a whole head (its skull) in her skin tone
-  const face = new FaceMesh({ skin: 'mei', size: 0.24 });
+  // The face: Sarah's photo skin on a 24 cm face, which makes a whole head (its skull) in her skin tone
+  const face = new FaceMesh({ skin: 'sarah', size: 0.24 });
   attachFace(head, face);          // now it nods and sways `head` as it talks
   face.gazeAt(camera);             // eyes first, then the head, follow the camera
 
@@ -67,7 +67,7 @@
   const caption = document.querySelector('#caption');
   document.querySelector('#talk').onclick = async () => {
     const audioContext = unlockAudio();           // sound needs a click first
-    await face.say(await face.clip('mei'), { audioContext, onCaption: t => (caption.textContent = t) });
+    await face.say(await face.clip('sarah-hello', new URL('voices/', import.meta.url).href), { audioContext, onCaption: t => (caption.textContent = t) });
   };
   face.express('happy', 3);
 

@@ -1,0 +1,919 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "Wireface hosted rigging",
+    "version": "1.0.0",
+    "description": "Creation requires connectivity and an active key. Saved .wireface.json playback never contacts Wireface. Images are discarded after processing, results expire after 24 hours, metadata after 90 days. Permanent keys are server-only; browsers use origin-bound scoped five-minute tokens."
+  },
+  "servers": [
+    {
+      "url": "https://wireface.dev/api/rigging/v1"
+    }
+  ],
+  "components": {
+    "securitySchemes": {
+      "bearer": {
+        "type": "http",
+        "scheme": "bearer"
+      }
+    }
+  },
+  "paths": {
+    "/2d": {
+      "post": {
+        "summary": "Prepare a 2d character",
+        "operationId": "rig2d",
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "header",
+            "name": "Idempotency-Key",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "pattern": "^[A-Za-z0-9_-]{8,128}$"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "./schemas/rigging-request.schema.json"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Existing terminal request.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./schemas/job.schema.json"
+                }
+              }
+            }
+          },
+          "202": {
+            "description": "Queued request; poll its ID.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./schemas/job.schema.json"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Stable error code and request ID.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./schemas/error.schema.json"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Stable error code and request ID.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./schemas/error.schema.json"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Stable error code and request ID.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./schemas/error.schema.json"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Stable error code and request ID.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./schemas/error.schema.json"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Stable error code and request ID.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./schemas/error.schema.json"
+                }
+              }
+            }
+          },
+          "410": {
+            "description": "Stable error code and request ID.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./schemas/error.schema.json"
+                }
+              }
+            }
+          },
+          "413": {
+            "description": "Stable error code and request ID.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./schemas/error.schema.json"
+                }
+              }
+            }
+          },
+          "415": {
+            "description": "Stable error code and request ID.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./schemas/error.schema.json"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Stable error code and request ID.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./schemas/error.schema.json"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Stable error code and request ID.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./schemas/error.schema.json"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Stable error code and request ID.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./schemas/error.schema.json"
+                }
+              }
+            }
+          },
+          "502": {
+            "description": "Stable error code and request ID.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./schemas/error.schema.json"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Stable error code and request ID.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./schemas/error.schema.json"
+                }
+              }
+            }
+          },
+          "504": {
+            "description": "Stable error code and request ID.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./schemas/error.schema.json"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/3d": {
+      "post": {
+        "summary": "Prepare a 3d character",
+        "operationId": "rig3d",
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "header",
+            "name": "Idempotency-Key",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "pattern": "^[A-Za-z0-9_-]{8,128}$"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "./schemas/rigging-request.schema.json"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Existing terminal request.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./schemas/job.schema.json"
+                }
+              }
+            }
+          },
+          "202": {
+            "description": "Queued request; poll its ID.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./schemas/job.schema.json"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Stable error code and request ID.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./schemas/error.schema.json"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Stable error code and request ID.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./schemas/error.schema.json"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Stable error code and request ID.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./schemas/error.schema.json"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Stable error code and request ID.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./schemas/error.schema.json"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Stable error code and request ID.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./schemas/error.schema.json"
+                }
+              }
+            }
+          },
+          "410": {
+            "description": "Stable error code and request ID.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./schemas/error.schema.json"
+                }
+              }
+            }
+          },
+          "413": {
+            "description": "Stable error code and request ID.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./schemas/error.schema.json"
+                }
+              }
+            }
+          },
+          "415": {
+            "description": "Stable error code and request ID.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./schemas/error.schema.json"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Stable error code and request ID.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./schemas/error.schema.json"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Stable error code and request ID.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./schemas/error.schema.json"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Stable error code and request ID.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./schemas/error.schema.json"
+                }
+              }
+            }
+          },
+          "502": {
+            "description": "Stable error code and request ID.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./schemas/error.schema.json"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Stable error code and request ID.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./schemas/error.schema.json"
+                }
+              }
+            }
+          },
+          "504": {
+            "description": "Stable error code and request ID.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./schemas/error.schema.json"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/tokens": {
+      "post": {
+        "summary": "Issue a scoped browser token using a permanent SDK key",
+        "operationId": "createToken",
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "./schemas/token-request.schema.json"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Browser token.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./schemas/token-response.schema.json"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Stable error code and request ID.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./schemas/error.schema.json"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Stable error code and request ID.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./schemas/error.schema.json"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Stable error code and request ID.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./schemas/error.schema.json"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Stable error code and request ID.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./schemas/error.schema.json"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Stable error code and request ID.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./schemas/error.schema.json"
+                }
+              }
+            }
+          },
+          "410": {
+            "description": "Stable error code and request ID.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./schemas/error.schema.json"
+                }
+              }
+            }
+          },
+          "413": {
+            "description": "Stable error code and request ID.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./schemas/error.schema.json"
+                }
+              }
+            }
+          },
+          "415": {
+            "description": "Stable error code and request ID.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./schemas/error.schema.json"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Stable error code and request ID.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./schemas/error.schema.json"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Stable error code and request ID.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./schemas/error.schema.json"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Stable error code and request ID.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./schemas/error.schema.json"
+                }
+              }
+            }
+          },
+          "502": {
+            "description": "Stable error code and request ID.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./schemas/error.schema.json"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Stable error code and request ID.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./schemas/error.schema.json"
+                }
+              }
+            }
+          },
+          "504": {
+            "description": "Stable error code and request ID.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./schemas/error.schema.json"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/jobs/{id}": {
+      "parameters": [
+        {
+          "name": "id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{32}$"
+          }
+        }
+      ],
+      "get": {
+        "summary": "Get progress or completed embedded character",
+        "operationId": "getJob",
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Job state.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./schemas/job.schema.json"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Stable error code and request ID.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./schemas/error.schema.json"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Stable error code and request ID.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./schemas/error.schema.json"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Stable error code and request ID.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./schemas/error.schema.json"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Stable error code and request ID.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./schemas/error.schema.json"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Stable error code and request ID.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./schemas/error.schema.json"
+                }
+              }
+            }
+          },
+          "410": {
+            "description": "Stable error code and request ID.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./schemas/error.schema.json"
+                }
+              }
+            }
+          },
+          "413": {
+            "description": "Stable error code and request ID.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./schemas/error.schema.json"
+                }
+              }
+            }
+          },
+          "415": {
+            "description": "Stable error code and request ID.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./schemas/error.schema.json"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Stable error code and request ID.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./schemas/error.schema.json"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Stable error code and request ID.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./schemas/error.schema.json"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Stable error code and request ID.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./schemas/error.schema.json"
+                }
+              }
+            }
+          },
+          "502": {
+            "description": "Stable error code and request ID.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./schemas/error.schema.json"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Stable error code and request ID.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./schemas/error.schema.json"
+                }
+              }
+            }
+          },
+          "504": {
+            "description": "Stable error code and request ID.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./schemas/error.schema.json"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "summary": "Cancel queued or processing work; already completed requests are unchanged",
+        "operationId": "cancelJob",
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Job state.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./schemas/job.schema.json"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Stable error code and request ID.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./schemas/error.schema.json"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Stable error code and request ID.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./schemas/error.schema.json"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Stable error code and request ID.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./schemas/error.schema.json"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Stable error code and request ID.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./schemas/error.schema.json"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Stable error code and request ID.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./schemas/error.schema.json"
+                }
+              }
+            }
+          },
+          "410": {
+            "description": "Stable error code and request ID.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./schemas/error.schema.json"
+                }
+              }
+            }
+          },
+          "413": {
+            "description": "Stable error code and request ID.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./schemas/error.schema.json"
+                }
+              }
+            }
+          },
+          "415": {
+            "description": "Stable error code and request ID.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./schemas/error.schema.json"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Stable error code and request ID.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./schemas/error.schema.json"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Stable error code and request ID.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./schemas/error.schema.json"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Stable error code and request ID.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./schemas/error.schema.json"
+                }
+              }
+            }
+          },
+          "502": {
+            "description": "Stable error code and request ID.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./schemas/error.schema.json"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Stable error code and request ID.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./schemas/error.schema.json"
+                }
+              }
+            }
+          },
+          "504": {
+            "description": "Stable error code and request ID.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./schemas/error.schema.json"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

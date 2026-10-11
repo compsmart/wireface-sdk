@@ -9,6 +9,7 @@
     "moduleResolution": "nodenext",
     "lib": ["ES2022", "DOM", "DOM.Iterable"],
     "types": [],
+    "paths": { "@wireface/sdk": ["../../types/index.d.ts"], "@wireface/sdk/*": ["../../types/*.d.ts"] },
     "skipLibCheck": false,
     "forceConsistentCasingInFileNames": true
   },

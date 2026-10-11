@@ -1,177 +1,87 @@
-<p align="center">
-  <img src="docs/images/3d/hero.webp" width="300" alt="A wireframe face; a photo skin sweeps onto it and talks, then Dracula's does">
-  <img src="docs/images/2d/talking.webp" width="300" alt="An anime girl, a painted noblewoman, a pixel-art cadet and a clay grandpa, each talking in turn">
-</p>
+# Wireface: free offline SDK, optional hosted rigging
 
-<h1 align="center">Wireface SDK</h1>
+The SDK maps photos onto its fixed mesh and animates faces locally, including commercial use. Expressions, rendering and audio-driven lip-sync are free. Canvas, 2D and three.js integrations live in one `@wireface/sdk` package.
 
-<p align="center">
-  Talking, lip-synced faces for the web.<br>
-  A 3D face on a canvas &middot; any picture of a face brought to life &middot; faces for three.js characters.<br>
-  Expressions, teeth, and lip sync from recorded clips, live audio or streamed speech. <b>No dependencies.</b>
-</p>
+Sign in at https://wireface.dev/account/ for the compiled SDK download and a free hosted rigging key. Install the downloaded archive with `npm install ./wireface-sdk-0.2.0.tgz`. In the SDK repository, run `npm install` and `npm start`, then open `http://localhost:5173`. Working-tree builds are previews until matching artifacts are released.
 
-<p align="center">
-  <a href="#install">Install</a> &middot;
-  <a href="#quick-start">Quick start</a> &middot;
-  <a href="#guides">Guides</a> &middot;
-  <a href="examples/">Examples</a> &middot;
-  <a href="#licence">Licence</a> &middot;
-  <a href="https://wireface.dev">wireface.dev</a>
-</p>
-
----
-
-This is the face engine from [Wireface](https://wireface.dev), the app that gives AI agents a face and a voice, as one
-package you can build into anything: an assistant, a game character, a kiosk, a call-centre screen. Faces are made
-for you from a face mesh, a photo or a picture, with no rigging or training, and run entirely in the browser.
-
-| Import | What it is | Guide |
-| --- | --- | --- |
-| `@wireface/sdk` | A 3D face on a `<canvas>`: a glowing wireframe, a sculpted head, or a photo skin | [3D faces](docs/guide.md) |
-| `@wireface/sdk/2d` | Any picture of a face, brought to life: photos, paintings, anime, pixel art, clay | [2D faces](docs/2d.md) |
-| `@wireface/sdk/three` | Faces on the heads of three.js characters, as real geometry or a live texture | [three.js](docs/three.md) |
-
-Plus `@wireface/sdk/config` and `@wireface/sdk/2d/config` (settings, safe to use in Node), `@wireface/sdk/2d/live`
-(Gemini Live conversations), `@wireface/sdk/2d/server` (the server side of 2D, for Node 18+),
-`@wireface/sdk/three/characters` (a [cast](docs/characters.md) of eleven ready-made characters) and
-`@wireface/sdk/three/kit` (what they're built from).
-
-## Install
-
-**With npm**, from GitHub:
-
-```sh
-npm install github:compsmart/wireface-sdk#v0.1.0
-```
+## Local photo mapping
 
 ```js
-import { createFace } from '@wireface/sdk';
+import { createFace, skinFromPhoto } from '@wireface/sdk';
+const face = createFace(canvas);
+await face.useSkin(await skinFromPhoto(photoFile));
+face.express('happy');
 ```
 
-**With no build step**, straight from a CDN:
+This detects landmarks on the device and maps the photo onto a baked, fixed mesh. It does not change facial geometry. No image is uploaded and no account or key is needed once installed. MediaPipe JavaScript, CPU WASM and the detection model are bundled in `assets/mediapipe`; no CDN is needed. Serve the package's `dist/` and `assets/` folders together over local HTTP. With a bundler, copy `assets/` into your public directory, pass `{ assets: '/wireface-assets/' }` to the renderer and call `skinFromPhoto(file, { bundle: '/wireface-assets/mediapipe/vision_bundle.mjs', wasm: '/wireface-assets/mediapipe/wasm', model: '/wireface-assets/mediapipe/face_landmarker.task' })`. Serve `.wasm` as `application/wasm`. The first installation requires downloading the package; thereafter mapping and playback work with external networking blocked.
 
-```html
-<script type="module">
-  import { createFace } from 'https://cdn.jsdelivr.net/gh/compsmart/wireface-sdk@v0.1.0/dist/wireface.js';
-</script>
-```
-
-**Or host it yourself:** each [release](https://github.com/compsmart/wireface-sdk/releases) has a zip with
-everything in it.
-
-Pages must be served over http(s), because browsers don't load ES modules from `file://`. With a bundler (Vite,
-webpack, Rollup, esbuild), copy `assets/` into your static folder and tell the face where it is: see
-[Bundlers](docs/guide.md#bundlers).
-
-TypeScript types are included.
-
-## Quick start
-
-### A 3D face
-
-```html
-<canvas id="face" style="width: 480px; height: 520px"></canvas>
-<script type="module">
-  import { createFace } from '@wireface/sdk';
-
-  const face = createFace(document.getElementById('face'));
-  await face.useSkin('dracula', { sweep: 1.6 });     // scans down onto the wireframe
-  face.express('amused');
-
-  const audioContext = new AudioContext();            // make or resume it in a click handler
-  await face.say(await face.clip('dracula'), { audioContext });   // lip-synced
-</script>
-```
-
-<img src="docs/images/3d/styles.jpg" alt="The same face as a glowing wireframe hologram, a shaded sculpt, and a photo skin">
-
-### Any picture
+## Hosted 2D and 3D creation
 
 ```js
+import { createRiggingClient } from '@wireface/sdk/rigging';
 import { createFace2d } from '@wireface/sdk/2d';
-
-const face = createFace2d(document.querySelector('canvas'));
-await face.useCharacter('sora');                     // a ready-made character...
-await face.useCharacter(file);                       // ...or any picture: the face is found, then it comes to life
+import { FaceMesh } from '@wireface/sdk/three';
+const rigging = createRiggingClient({
+  getToken: async () => {
+    const response = await fetch('/api/wireface-token', { method: 'POST' });
+    if (!response.ok) throw new Error('Could not authorise rigging');
+    return (await response.json()).token;
+  },
+});
+const face = createFace2d(canvas);
+await face.useCharacter(await rigging.rig2d(pictureFile));
 face.express('happy');
-await face.say(await face.clip('sora'), { audioContext });
+const mesh = new FaceMesh();
+await mesh.useCharacter(await rigging.rig3d(portraitFile));
+scene.add(mesh);
 ```
 
-<img src="docs/images/2d/styles.jpg" alt="Thirteen characters: photo, 3D animated, anime, cartoon, comic, painting, watercolour, sketch, pixel art, claymation, flat vector, creature, robot">
-
-### three.js
+Install `three` separately for the optional three.js integration. Use `examples/hosted/backend.mjs`: set `WIREFACE_SDK_KEY` in its environment, then `npm start`. It runs on localhost and issues five-minute tokens for only `rig:2d` and `rig:3d`, scoped to that browser origin. Production backends must authenticate their own users before issuing tokens. Never put permanent keys in browser bundles. The client rejects permanent keys in browser contexts.
 
 ```js
-import { FaceMesh, attachFace } from '@wireface/sdk/three';
-
-const face = new FaceMesh({ skin: 'mei', size: 0.27 });
-attachFace(character.head, face);                    // it nods and sways that head as it talks
-face.gazeAt(camera);
-face.express('happy');
-await face.say(await face.clip('mei'), { audioContext });
+// Backend only, after authorising the application's user:
+const rigging = createRiggingClient({ apiKey: process.env.WIREFACE_SDK_KEY });
+const { token, expiresAt } = await rigging.createToken({
+  scope: ['rig:2d'], origin: 'https://your-app.example',
+});
 ```
 
-three.js is a peer dependency: install it yourself (0.160 or later). With no build step, map it in an import map:
+`rig2d` and `rig3d` accept a File, Blob or image URL. URL images are fetched by the SDK and uploaded as bytes; the service does not fetch arbitrary URLs. Use JPEG, PNG or still WebP, at most 12 MB and 40 megapixels, with one clear face. 3D needs a front-facing portrait with visible facial detail. 2D supports drawings and stylised characters. Unusable images are rejected; no manual or canonical fallback silently replaces your character.
 
-```html
-<script type="importmap">
-{ "imports": {
-  "three": "https://cdn.jsdelivr.net/npm/three@0.186.1/build/three.module.js",
-  "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.186.1/examples/jsm/",
-  "@wireface/sdk/three": "https://cdn.jsdelivr.net/gh/compsmart/wireface-sdk@v0.1.0/dist/three.js"
-} }
-</script>
+```js
+const abort = new AbortController();
+const character = await rigging.rig3d(file, {
+  signal: abort.signal,
+  idempotencyKey: crypto.randomUUID(), // retain for a retry of the same submission
+  onProgress: ({ stage, requestId }) => console.log(stage, requestId),
+});
 ```
 
-<img src="docs/images/three/cast.jpg" alt="The whole cast of ready-made three.js characters on one stage">
+The client retries network failures and 429/502/503/504 responses at most twice by default, with bounded backoff. It has a three-minute overall timeout, configurable up to ten minutes. Cancelling stops polling and makes a best-effort server cancellation. `WirefaceError` exposes `code`, `status`, `requestId` and `retryable`. A submission interrupted before its job ID arrives can be retrieved by retrying with the same idempotency key and input. Reusing a key with different input returns `idempotency_conflict`. Completed results expire after 24 hours; metadata is retained for 90 days.
 
-## Guides
+Common codes include `invalid_image`, `face_count`, `low_confidence`, `poor_anchors`, `anchor_disagreement`, `dense_face_missing`, `key_revoked`, `token_expired`, `scope_denied`, `busy`, `result_expired`, `provider_unavailable` and `processing_timeout`. Request a new browser token when it expires. Rotating/revoking a permanent key invalidates its outstanding browser tokens. Credentials do not affect saved-character playback.
 
-- **[3D faces](docs/guide.md)**: looks, skins, skins from photos, teeth, expressions, talking, config files, events,
-  recipes.
-- **[2D faces](docs/2d.md)**: characters, finding faces in your own pictures, fitting by hand, the look, teeth,
-  conversations, the server side.
-- **[three.js](docs/three.md)**: FaceMesh and FaceScreen, putting a face on a head, gaze, speech, looks, building
-  characters.
-- **[The cast](docs/characters.md)**: the ready-made three.js characters.
+## Export and offline playback
 
-See them all running at [wireface.dev](https://wireface.dev): the [3D playground](https://wireface.dev/try/),
-[2D](https://wireface.dev/2d/try/) and the [three.js theatre](https://wireface.dev/threejs/demo/).
-
-## Examples
-
-[`examples/`](examples/) has small pages, one feature each, for 3D, 2D and three.js. To run them:
-
-```sh
-git clone https://github.com/compsmart/wireface-sdk.git
-cd wireface-sdk
-npm install          # three.js, for the three.js examples
-npm start            # http://127.0.0.1:5173/examples/
+```js
+import { loadCharacter, exportCharacter } from '@wireface/sdk';
+const saved = await exportCharacter(character); // Blob; save as character.wireface.json
+const restored = await loadCharacter(saved);    // also accepts URL or ArrayBuffer
+await face.useCharacter(restored);
 ```
 
-The 2D examples that find faces, hold conversations or draw new characters need a Gemini API key: put
-`GEMINI_API_KEY=...` in a `.env` file next to `package.json`. It stays in the dev server.
+The versioned JSON contains an embedded raster texture, baked mesh and expression channels, jaw, eyes, mouth, render metadata and prepared 2D transfer data. It contains no credentials, expiring asset URLs or executable code. Loading validates and copies it before renderer replacement. File-based loading never invokes fitting or contacts Wireface. Fetching a character URL uses the network only to obtain that file. Legacy `.wface` version-1 documents remain loadable.
 
-## What's in here
+Feed any TTS provider's audio into `face.listenTo(audioContext, source)` or the existing clip/stream interfaces. Lip-sync analysis and animation run locally. Cloud TTS has its own connectivity, account and charges. The optional Gemini Live conversation examples use a separate `GEMINI_API_KEY` in the backend environment; `GEMINI_LIVE_MODEL` can select a supported live model. `examples/playback/` demonstrates exported-character playback and local audio; `examples/3d/photo.html` demonstrates offline mapping; `examples/hosted/` demonstrates remote 2D and three.js, cancellation, expressions, export, reload and audio. `node examples/hosted/build-character.mjs photo.jpg character.wireface.json 3d` builds a saved character from Node.
 
-| | |
-| --- | --- |
-| `dist/` | the SDK: ES modules, minified, sharing one engine between the entries |
-| `assets/` | ready-made skins and voices (3D), characters and voices (`assets/2d/`) |
-| `types/` | TypeScript types for every entry |
-| `face.schema.json`, `face2d.schema.json` | JSON Schemas for config files |
-| `docs/` | the guides |
-| `examples/` | the examples |
+## Commercial hosted characters and source
 
-## Licence
+Noncommercial hosted creation/use is free after sign-in. Commercial use of hosted-rigged characters costs £25/year for developers and organisations with fewer than 10 employees, covering one named product. Larger organisations and multiple commercial products require Enterprise terms. Renewal is manual. An active licence permits existing account characters in the licensed product without re-rigging. End users need no account. Ongoing commercial use needs an active licence, but saved characters never stop working or contact a licence server.
 
-Free for personal and non-commercial use, under the [PolyForm Noncommercial License 1.0.0](LICENSE.md).
+The commercial licence includes full SDK and integration source, with updates during the term. Hosted detection orchestration, morphing, fitting and rig construction stay private and are excluded. Local fixed-frame mapping and SDK animation remain free for commercial use regardless of this entitlement. Historical licences and third-party notices are preserved. Desktop and Chat have separate free offerings and licences.
 
-Using it at work, for clients, or in a product or service you sell needs a **commercial licence**, which also gives
-you the full source code: see [wireface.dev/license](https://wireface.dev/license/). Some parts come from other
-projects and keep their own licences: see [NOTICE](NOTICE).
+## API contracts
 
-Bugs and questions: [GitHub issues](https://github.com/compsmart/wireface-sdk/issues).
+The package includes `openapi.json` (OpenAPI 3.1), request/response schemas under `schemas/`, and TypeScript declarations for every entry. The optional rigging entry has no effect on playback dependencies. HTTP endpoints are `POST /api/rigging/v1/2d`, `POST /api/rigging/v1/3d`, `GET /api/rigging/v1/jobs/{id}`, `DELETE /api/rigging/v1/jobs/{id}`, and `POST /api/rigging/v1/tokens`.
 
-Required Notice: Copyright 2026 Compsmart (https://wireface.dev)
+Private creation uses structured Gemini observations, independent anatomical checks, dense server-side MediaPipe for 3D portraits, and Wireface's existing fitter. Gemini does not generate rigging code. See [Gemini structured output](https://ai.google.dev/gemini-api/docs/structured-output) and [MediaPipe Python](https://developers.google.com/edge/mediapipe/solutions/vision/face_landmarker/python).

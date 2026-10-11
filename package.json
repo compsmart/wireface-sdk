@@ -1,8 +1,8 @@
 {
   "name": "@wireface/sdk",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "license": "SEE LICENSE IN LICENSE.md",
-  "description": "Talking, lip-synced faces for the web: a 3D face on a canvas, any picture of a face brought to life, and faces for three.js characters. Expressions, teeth, and lip sync from recorded clips, live audio or streamed speech.",
+  "description": "Free offline face animation and local photo mapping, with optional hosted 2D/3D rigging.",
   "homepage": "https://wireface.dev",
   "repository": {
     "type": "git",
@@ -33,10 +33,6 @@
       "types": "./types/2d-config.d.ts",
       "default": "./dist/2d-config.js"
     },
-    "./2d/server": {
-      "types": "./types/2d-server.d.ts",
-      "default": "./dist/2d-server.js"
-    },
     "./three": {
       "types": "./types/three.d.ts",
       "default": "./dist/three.js"
@@ -52,7 +48,12 @@
     "./assets/*": "./assets/*",
     "./face.schema.json": "./face.schema.json",
     "./face2d.schema.json": "./face2d.schema.json",
-    "./package.json": "./package.json"
+    "./package.json": "./package.json",
+    "./rigging": {
+      "types": "./types/rigging.d.ts",
+      "default": "./dist/rigging.js"
+    },
+    "./character.schema.json": "./schemas/character.schema.json"
   },
   "files": [
     "dist",
@@ -63,7 +64,10 @@
     "README.md",
     "LICENSE.md",
     "NOTICE",
-    "licenses"
+    "licenses",
+    "schemas",
+    "openapi.json",
+    "HOSTED-RIGGING-TERMS.md"
   ],
   "peerDependencies": {
     "three": ">=0.160.0"
@@ -77,7 +81,9 @@
     "start": "node tools/serve.mjs",
     "test": "node --test test/*.test.js",
     "build": "node tools/build.mjs",
-    "check": "node tools/check.mjs"
+    "check": "node tools/check.mjs",
+    "pack:release": "node tools/package-release.mjs",
+    "check:engine": "node tools/verify-engine.mjs"
   },
   "engines": {
     "node": ">=18"

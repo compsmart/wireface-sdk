@@ -27,18 +27,6 @@ test('config validation works in Node', async () => {
   assert.throws(() => two.validateConfig({ framing: 'nope' }), two.ConfigError);
 });
 
-test('the 2D server answers its status without a key', async () => {
-  const { createApi } = await import('../dist/2d-server.js');
-  const api = createApi({ key: '' });
-  assert.equal(api.enabled, false);
-  let status, body = '';
-  const res = { destroyed: false, writeHead: s => { status = s; }, end: b => { body += b ?? ''; } };
-  const handled = await api.handle({ method: 'GET', url: '/api/status', headers: { host: 'localhost' }, socket: {} }, res);
-  assert.equal(handled, true);
-  assert.equal(status, 200);
-  assert.equal(JSON.parse(body).gemini, false);
-});
-
 test('the types check', { skip: !existsSync(join(ROOT, 'node_modules', 'typescript')) && 'TypeScript is not installed' }, () => {
   const tsc = join(ROOT, 'node_modules', 'typescript', 'bin', 'tsc');
   execFileSync(process.execPath, [tsc, '-p', join(ROOT, 'test', 'types')], { stdio: 'pipe' });

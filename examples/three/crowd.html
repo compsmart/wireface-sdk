@@ -34,7 +34,8 @@ faces.forEach(f => f.say(clip));</pre>
 </aside>
 <script type="module">
   import * as THREE from 'three';
-  import { FaceMesh, catalogue, ASSETS, voices } from '@wireface/sdk/three';
+  import { FaceMesh, catalogue, ASSETS } from '@wireface/sdk/three';
+  const lines = new URL('voices/', import.meta.url).href;   // this page's own lines (examples/voices/lines.json)
   import { hairCap, clay } from '@wireface/sdk/three/kit';
   import { stage } from './stage.js';
 
@@ -61,7 +62,7 @@ faces.forEach(f => f.say(clip));</pre>
   add(24);
 
   document.querySelector('#talk').onclick = async () => {
-    const clip = await faces[0].clip('marcus', voices('3d'));
+    const clip = await faces[0].clip('crowd', lines);
     faces.forEach((f, i) => setTimeout(() => { f.express('excited', 3); f.say(clip); }, i * 120));
   };
   let looking = false;

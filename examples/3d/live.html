@@ -22,7 +22,7 @@
   import { createFace } from '../../dist/wireface.js';
 
   const face = createFace(document.querySelector('canvas'));
-  face.useSkin('marcus');
+  face.useCharacter('marcus');
   let ctx = null, stop = null;
   const audioContext = () => (ctx ??= new AudioContext());
 

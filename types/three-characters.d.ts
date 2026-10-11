@@ -14,7 +14,7 @@ export * as kit from './three-kit.js';
 export type { CharacterDef, CharacterLine } from './three-kit.js';
 
 /** A member of the cast. */
-export type CastId = 'mei' | 'walter' | 'dracula' | 'grub' | 'unit7' | 'zib' | 'wisp' | 'patch' | 'amara' | 'eleanor' | 'kit';
+export type CastId = 'sarah' | 'walter' | 'dracula' | 'grub' | 'unit7' | 'zib' | 'wisp' | 'patch' | 'amara' | 'eleanor' | 'kit';
 /** Options for a cast member's face: a FaceMesh's or a FaceScreen's, as the character has. */
 export type CastOptions = FaceMeshOptions | FaceScreenOptions;
 /** A cast member's definition. */

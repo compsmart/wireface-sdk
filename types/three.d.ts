@@ -1,10 +1,11 @@
+import type { LoadedCharacter as PortableCharacter, CharacterTransition, BakedRig } from './character.js';
 // @wireface/sdk/three: talking, lip-synced faces on three.js characters. three.js is a peer dependency.
 //
 //   import { FaceMesh, attachFace } from '@wireface/sdk/three';
-//   const face = new FaceMesh({ skin: 'mei', size: 0.3 });
+//   const face = new FaceMesh({ skin: 'sarah', size: 0.3 });
 //   attachFace(character.head, face);
 //   face.express('happy');
-//   await face.say(await face.clip('mei'), { audioContext });
+//   await face.say(await face.clip('sarah'), { audioContext });
 
 import { Group } from 'three';
 import type {
@@ -17,12 +18,12 @@ import type {
   LoadedClip, MouthTimeline, SayOptions, SkinInput, ViewEvent, Wireface,
 } from './index.js';
 import type { Face2DConfig, Face2DConfigPatch } from './2d-config.js';
-import type { CharacterInput, DetectOptions, LoadedCharacter, UseCharacterOptions, Wireface2D } from './2d.js';
+import type { CharacterInput, LoadedCharacter, UseCharacterOptions, Wireface2D } from './2d.js';
 
 // From core, for convenience: the names of things, skins and speech.
 export {
   ALIASES, ASSETS, CHANNELS, ConfigError, DEFAULTS, EXPRESSIONS, LiveLipSync, MOODS, MouthTracker, PRESETS, RANGES,
-  StreamVoice, TEETH_STYLES, catalogue, loadClip, playClip, resolveExpression, skinFromPhoto,
+  StreamVoice, TEETH_STYLES, catalogue, loadClip, playClip, resolveExpression, loadCharacter, exportCharacter, skinFromPhoto, MEDIAPIPE,
 } from './index.js';
 export type {
   Alias, AudioSource, Channel, Clip, ExpressionName, ExpressionWeights, FaceConfig, FaceConfigPatch, FaceEvent,
@@ -54,7 +55,7 @@ export interface HeadShape {
 }
 /** A FaceMesh's own options, and any of core's settings given directly (style, preset, colors, glow...). */
 export type FaceMeshOptions = Omit<FaceMeshConfigPatch, 'skin'> & {
-  /** A catalogue id ('mei', 'dracula'...), { image, landmarks, teeth? }, or none. */
+  /** A catalogue id ('sarah', 'dracula'...), { image, landmarks, teeth? }, or none. */
   skin?: string | SkinInput | null;
   /** The face's height, chin to hairline, in scene units (default 0.25). */
   size?: number;
@@ -115,6 +116,8 @@ export interface FaceMouth {
 
 /** A Wireface face as three.js geometry: a Group to add to a character's head, lit by your scene. */
 export declare class FaceMesh extends Group {
+  useCharacter(character: string | PortableCharacter, options?: CharacterTransition): Promise<PortableCharacter | undefined>;
+  installRig(rig: BakedRig): void;
   constructor(options?: FaceMeshOptions);
   readonly isFaceMesh: true;
   /** The assets folder's URL. */
@@ -226,7 +229,7 @@ export interface FaceScreenOptions<E extends ScreenEngine = ScreenEngine> {
   /** The engine's assets folder, if not its own. */
   assets?: string;
   /** 2d: how to find faces in new pictures. */
-  detect?: Pick<DetectOptions, 'gemini' | 'mediapipe'>;
+
 }
 /** A FaceScreen's material: unlit, the face over `background` (null for see-through). */
 export interface ScreenMaterialOptions {
@@ -425,3 +428,5 @@ export type ColourSource = ImageBitmap | HTMLCanvasElement | HTMLImageElement | 
 export declare function skinColour(picture: ColourSource, landmarks: LandmarksInput): Color;
 /** A skin picture's eye colour. */
 export declare function irisColour(picture: ColourSource, landmarks: LandmarksInput): Color;
+
+export declare function wrapGeometry(geometry: BufferGeometry, options?: { width?: number; height?: number; center?: [number, number]; flip?: boolean }): BufferGeometry;

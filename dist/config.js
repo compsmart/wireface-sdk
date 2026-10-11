@@ -1,2 +1,2 @@
-/*! Wireface | Required Notice: Copyright 2026 Compsmart (https://wireface.dev) | Free for personal and non-commercial use; commercial licence: https://wireface.dev/license/ */
-import{a as o,b as r,c as e,d as f,e as m,f as p,g as t}from"./chunk-7QNJRPFE.js";import"./chunk-HERDWKRJ.js";export{p as ConfigError,f as DEFAULTS,e as PRESETS,m as RANGES,o as STYLES,r as TEETH_STYLES,t as validateConfig};
+/*! Wireface | Required Notice: Copyright 2026 Compsmart (https://wireface.dev) | Free for personal and commercial use under the Wireface SDK Licence; https://wireface.dev/license/ */
+import{a as o,b as r,c as e,d as f,e as m,f as p,g as t}from"./chunk-HIMAYLF4.js";import"./chunk-AJE3PZZ5.js";export{p as ConfigError,f as DEFAULTS,e as PRESETS,m as RANGES,o as STYLES,r as TEETH_STYLES,t as validateConfig};

@@ -1,10 +1,12 @@
+import type { LoadedCharacter, CharacterTransition, BakedRig } from './character.js';
+export * from './character.js';
 // @wireface/sdk: a talking, lip-synced 3D face on a <canvas> (Wireface core).
 //
 //   import { createFace } from '@wireface/sdk';
 //   const face = createFace(canvas, { config: { preset: 'cyan' } });
-//   await face.useSkin('mei', { sweep: 1.6 });
+//   await face.useSkin('sarah', { sweep: 1.6 });
 //   face.express('happy');
-//   await face.say(await face.clip('mei'), { audioContext });
+//   await face.say(await face.clip('sarah'), { audioContext });
 
 import type { FaceConfig, FaceConfigPatch, TeethStyle } from './config.js';
 
@@ -76,6 +78,7 @@ export interface CatalogueSkin {
   image: string;
   thumb: string;
   landmarks: string;
+  character: string;
 }
 /** A skin of your own: a picture and its landmarks (each a URL, or the thing itself). */
 export interface SkinInput {
@@ -92,12 +95,13 @@ export interface PhotoSkin {
   height: number;
 }
 
-/** MediaPipe's default files, from a CDN. */
-export declare const MEDIAPIPE: Readonly<MediaPipePaths>;
+export declare const MEDIAPIPE: MediaPipePaths;
+export declare function skinFromPhoto(photo: Blob | string | URL, paths?: Partial<MediaPipePaths>): Promise<PhotoSkin>;
+
 /** The ready-made skins in the `assets` folder (see ASSETS). */
 export declare function catalogue(assets: string): Promise<CatalogueSkin[]>;
 /** A skin from a photo (File, Blob or URL); rejects if there's no face in it. `paths` hosts MediaPipe yourself. */
-export declare function skinFromPhoto(photo: Blob | string, paths?: Partial<MediaPipePaths>): Promise<PhotoSkin>;
+
 
 // --- speech --------------------------------------------------------------------------------------------------------
 
@@ -274,6 +278,7 @@ export interface FaceViewOptions {
 
 /** The engine's view of one face on a canvas: `face.view`. */
 export declare class FaceView {
+  installRig(rig: BakedRig, options?: CharacterTransition): BakedRig;
   constructor(canvas: HTMLCanvasElement, options?: FaceViewOptions);
   readonly canvas: HTMLCanvasElement;
   /** The mouth timeline, to feed mouth packets from a stream. */
@@ -299,6 +304,8 @@ export declare class FaceView {
 
 /** A talking face on a canvas. */
 export declare class Wireface {
+  useCharacter(character: string | LoadedCharacter, options?: CharacterTransition): Promise<LoadedCharacter | undefined>;
+  readonly character?: LoadedCharacter;
   constructor(canvas: HTMLCanvasElement, options?: FaceOptions);
   readonly canvas: HTMLCanvasElement;
   /** The assets folder's URL. */
@@ -343,3 +350,5 @@ export declare class Wireface {
 export declare const ASSETS: string;
 /** A face on `canvas`. */
 export declare function createFace(canvas: HTMLCanvasElement, options?: FaceOptions): Wireface;
+
+export { exportCharacter } from './character.js';

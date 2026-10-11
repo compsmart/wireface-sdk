@@ -4,9 +4,10 @@
 //   node tools/build.mjs                  from ../core, ../2d and ../threejs, as committed on main and pushed
 //   node tools/build.mjs --src <folder>   from checkouts in another folder
 //   node tools/build.mjs --dirty          from whatever each repo has committed on its current branch (to try things)
+//   node tools/build.mjs --working-tree   include tracked and untracked development changes
 //   node tools/build.mjs --no-docs        leave docs/ as it is
 //
-// Only committed files are used (read out of git, never the working tree), so other work in progress stays out.
+// Releases read committed files from git. --working-tree explicitly opts into local development changes.
 // esbuild bundles each entry into dist/ as minified ES modules that share chunks: a page using the 3D face and
 // three.js loads the engine once. Everything lands flat in dist/, so the URLs the code makes relative to itself (the
 // assets folder, the teeth pictures, the microphone worklet) come out the same from every chunk.
@@ -16,22 +17,26 @@ import { copyFileSync, existsSync, mkdirSync, readFileSync, readdirSync, rmSync,
 import { basename, dirname, join, relative, resolve, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { gzipSync } from 'node:zlib';
+import { bakeCatalogues } from './bake-characters.mjs';
+import { pathToFileURL } from 'node:url';
 import { buildExamples } from './examples.mjs';
 
 const SDK = resolve(fileURLToPath(new URL('..', import.meta.url)));
 const args = process.argv.slice(2);
 const SRC = resolve(args.includes('--src') ? args[args.indexOf('--src') + 1] : join(SDK, '..'));
-const DIRTY = args.includes('--dirty');
+const WORKTREE = args.includes('--working-tree');
+const DIRTY = args.includes('--dirty') || WORKTREE;
 const NO_DOCS = args.includes('--no-docs');            // leave docs/ as it is
-const REPOS = ['core', '2d', 'threejs'];
+const REPOS = ['core', '2d', 'threejs', 'morphs'];
 const NOTICE = '/*! Wireface | Required Notice: Copyright 2026 Compsmart (https://wireface.dev) | Free for personal and '
-  + 'non-commercial use; commercial licence: https://wireface.dev/license/ */';
+  + 'commercial use under the Wireface SDK Licence; https://wireface.dev/license/ */';
 
 /** Each entry of the package (dist/<name>.js) and the module it re-exports, in the staged source. */
 const ENTRIES = {
   wireface: "export * from '../core/src/index.js';",
   config: "export * from '../core/src/config.js';",
-  '2d': "export * from '../2d/src/index.js';\nexport { DetectionOverlay } from '../2d/src/overlay.js';\n"
+  rigging: "export * from '../sdk/src/rigging.js';",
+  '2d': "export * from '../2d/src/index.js';\n"
     + "export { teethAsset } from '../2d/src/engine/teeth.js';",
   '2d-live': "export * from '../2d/src/live.js';",
   '2d-config': "export * from '../2d/src/config.js';",
@@ -39,7 +44,7 @@ const ENTRIES = {
   'three-characters': "export * from '../threejs/characters/index.js';",
   'three-kit': "export * from '../threejs/characters/kit.js';",
 };
-const SERVER = { '2d-server': "export * from '../2d/server/api.mjs';" };   // Node only, built on its own
+const SERVER = {};
 
 /**
  * Where the SDK's layout differs from the repos', the code is changed on the way in. Each change must match exactly
@@ -48,8 +53,6 @@ const SERVER = { '2d-server': "export * from '../2d/server/api.mjs';" };   // No
 const PATCHES = [
   // 2D's assets go in assets/2d/ (both packages have a voices/cast.json)
   ['2d/src/characters.js', "new URL('../assets/', import.meta.url)", "new URL('../assets/2d/', import.meta.url)"],
-  ['2d/server/api.mjs', "join(root, 'assets', 'characters', 'characters.json')", "join(root, 'assets', '2d', 'characters', 'characters.json')"],
-  ['2d/server/api.mjs', 'set root to the @wireface/2d folder', 'set root to the @wireface/sdk folder'],
   // 2D's photographic teeth are core's, which land in dist/teeth/ like its own drawn ones
   ['2d/src/engine/teeth.js', '`../core/engine/teeth/${id}.png`', '`./teeth/${id}.png`'],
   // the voices folders, found from this module rather than through the packages (which a bundle doesn't have)
@@ -74,13 +77,25 @@ function stage(dir) {
     if (!existsSync(join(repo, '.git'))) die(`no repo at ${repo}`);
     const branch = git(repo, 'branch', '--show-current'), head = git(repo, 'rev-parse', 'HEAD');
     let pushed = '';
-    try { pushed = git(repo, 'rev-parse', 'origin/main'); } catch {}
+    if (!DIRTY) try { pushed = git(repo, 'rev-parse', 'origin/main'); } catch {}
     if (!DIRTY && (branch !== 'main' || head !== pushed)) {
       die(`${name} is on ${branch || 'a detached HEAD'} at ${head.slice(0, 7)}, not main as pushed (${pushed.slice(0, 7) || 'none'}). `
         + 'Use --dirty to build it anyway.');
     }
     const changed = git(repo, 'status', '--porcelain', '--untracked-files=no');
-    console.log(`  ${name.padEnd(8)} ${head.slice(0, 7)} on ${branch}${changed ? '  (uncommitted changes left out)' : ''}`);
+    console.log(`  ${name.padEnd(8)} ${head.slice(0, 7)} on ${branch}${WORKTREE ? '  (working-tree preview)' : changed ? '  (uncommitted changes left out)' : ''}`);
+    if (WORKTREE) {
+      const paths = git(repo, 'ls-files', '-z', '--cached', '--others', '--exclude-standard').split('\0').filter(Boolean);
+      for (const file of paths) {
+        const from = join(repo, file);
+        if (!existsSync(from) || !statSync(from).isFile()) continue;
+        const to = resolve(dir, name, file);
+        if (!to.startsWith(resolve(dir) + sep)) die('Unsafe staging path');
+        mkdirSync(dirname(to), { recursive: true });
+        copyFileSync(from, to);
+      }
+      continue;
+    }
     const files = git(repo, 'ls-tree', '-r', '-z', 'HEAD').split('\0').filter(Boolean).map(line => {
       const [meta, path] = line.split('\t');
       const [mode, type, sha] = meta.split(' ');
@@ -114,14 +129,14 @@ function checkCopy(dir) {
   const walk = d => readdirSync(d).flatMap(n => (statSync(join(d, n)).isDirectory() ? walk(join(d, n)) : [join(d, n)]));
   for (const file of walk(copy).filter(f => /\.(js|png)$/.test(f))) {        // its README is its own
     const own = join(dir, 'core', 'src', relative(copy, file));
-    if (!existsSync(own) || !readFileSync(own).equals(readFileSync(file))) die(`2d/src/core/${relative(copy, file)} differs from core's: sync 2d first`);
+    if (!existsSync(own) || (file.endsWith('.js') ? readFileSync(own, 'utf8').replace(/\r\n/g, '\n') !== readFileSync(file, 'utf8').replace(/\r\n/g, '\n') : !readFileSync(own).equals(readFileSync(file)))) die(`2d/src/core/${relative(copy, file)} differs from core's: sync 2d first`);
   }
 }
 
 /** @wireface/core and @wireface/2d come from the staged source, and 2D's copy of core is core itself. */
 function engine(dir) {
   const copy = join(dir, '2d', 'src', 'core') + sep;
-  const core = { '': 'index.js', '/config': 'config.js', '/expressions': 'expressions.js', '/skins': 'skins.js', '/speech': 'speech.js' };
+  const core = { '': 'index.js', '/config': 'config.js', '/expressions': 'expressions.js', '/skins': 'skins.js', '/speech': 'speech.js', '/character': 'character.js' };
   return {
     name: 'wireface-engine',
     setup(b) {
@@ -160,6 +175,12 @@ async function main() {
   mkdirSync(dir);
   try {
     stage(dir);
+    copyDir(join(SDK, 'src'), join(dir, 'sdk/src'));
+    // Preserve experimental private integrations in their source repo, exclude construction from shipped SDK.
+    const threeIndex = join(dir, 'threejs/src/index.js');
+    writeFileSync(threeIndex, readFileSync(threeIndex, 'utf8').split('\n').filter(line => !/pictureCharacter|autoAttach|ModelFace, findFeatures/.test(line)).join('\n'));
+    const screen = join(dir, 'threejs/src/face-screen.js');
+    writeFileSync(screen, readFileSync(screen, 'utf8').replace("import { isPicture, pictureCharacter } from './picture.js';", '').replace("if (this.engine === '2d' && isPicture(character)) character = await pictureCharacter(character);", '')); 
     checkCopy(dir);
     patch(dir);
     mkdirSync(join(dir, 'entries'));
@@ -174,10 +195,9 @@ async function main() {
       outdir: dist, splitting: true, platform: 'browser', target: 'es2022', external: ['three', 'three/*'],
       entryNames: '[name]', chunkNames: '[name]-[hash]',
     });
-    const server = await build({
-      ...shared, entryPoints: { '2d-server': join(dir, 'entries', '2d-server.js') },
-      outdir: dist, platform: 'node', target: 'node18',
-    });
+    const creatorDist = join(dir, 'private');
+    const creator = await build({ ...shared, entryPoints: { creator: join(dir, 'morphs/src/creator.js') },
+      outdir: creatorDist, splitting: false, platform: 'browser', target: 'es2022' });
 
     // the microphone's AudioWorklet is loaded by URL (dist/audio/), not imported
     const worklet = await transform(readFileSync(join(dir, '2d', 'src', 'audio', 'mic-worklet.js'), 'utf8'),
@@ -196,7 +216,7 @@ async function main() {
 
     // the skins, characters and voices (and the brand marks for the examples' tabs)
     const assets = join(SDK, 'assets');
-    for (const name of ['skins', 'voices', 'brand']) copyDir(join(dir, 'core', 'assets', name), join(assets, name));
+    for (const name of ['skins', 'voices', 'brand', 'mediapipe']) copyDir(join(dir, 'core', 'assets', name), join(assets, name));
     for (const name of ['characters', 'voices']) copyDir(join(dir, '2d', 'assets', name), join(assets, '2d', name));
 
     // the config schemas, with the ids they're published under
@@ -206,6 +226,25 @@ async function main() {
       writeFileSync(join(SDK, to), `${JSON.stringify(schema, null, 2)}\n`);
     }
 
+    await bakeCatalogues(assets, await import(pathToFileURL(join(creatorDist, 'creator.js')).href));
+    const forbidden = /(?:morphs\/src|rig-build|\/detect\/|prepare-transfer|registration|creation-characters|overlay\.js|generate\.js)/;
+    const leaked = Object.keys(browser.metafile.inputs).filter(p => forbidden.test(p.replace(/\\/g, '/')));
+    if (leaked.length) die('Private construction code leaked into SDK: ' + leaked.join(', '));
+    writeFileSync(join(SDK, 'build-manifest.json'), JSON.stringify({ workingTree: WORKTREE, revisions: Object.fromEntries(REPOS.map(name => [name, git(join(SRC, name), 'rev-parse', 'HEAD')])), runtime: browser.metafile, privateBaker: creator.metafile }, null, 2));
+
+    const source = join(SDK, '.source');
+    rmSync(source, { recursive: true, force: true });
+    for (const input of Object.keys(browser.metafile.inputs)) {
+      const from = resolve(SDK, input), rel = relative(dir, from);
+      if (rel.startsWith('..') || !from.startsWith(dir + sep)) die('Unexpected source outside stage: ' + input);
+      const to = join(source, rel); mkdirSync(dirname(to), { recursive: true }); copyFileSync(from, to);
+    }
+    mkdirSync(join(source, '2d/src/audio'), { recursive: true });
+    copyFileSync(join(dir, '2d/src/audio/mic-worklet.js'), join(source, '2d/src/audio/mic-worklet.js'));
+    copyFileSync(join(SDK, 'tools/source-build.mjs'), join(source, 'build.mjs'));
+    writeFileSync(join(source, 'package.json'), JSON.stringify({ ...JSON.parse(readFileSync(join(SDK, 'package.json'), 'utf8')), private: true, scripts: { build: 'node build.mjs', start: 'node examples/hosted/backend.mjs' }, devDependencies: { esbuild: '^0.28.2' } }, null, 2));
+    writeFileSync(join(source, 'SOURCE-README.md'), '# SDK and integration source\n\nRun `npm install` and `npm run build` in this folder. Install `three` to run its integration examples, then `npm start`. The package exports and TypeScript declarations match the compiled SDK. Source is marked private to prevent accidental registry publication.\n\nThe editable core, 2d, threejs and sdk folders contain the runtime, renderers, local photo mapping and hosted client. The baked canonical rig and prepared catalogue characters are data. Hosted detection, fitting, morphing and rig construction are excluded. See LICENSE.md and HOSTED-RIGGING-TERMS.md.\n');
+
     buildExamples(dir, join(SDK, 'examples'));
     if (!NO_DOCS) (await import('./docs.mjs')).buildDocs(dir, join(SDK, 'docs'));
     for (const [from, to] of README_IMAGES) {
@@ -214,7 +253,7 @@ async function main() {
     }
 
     // what each entry costs a page: its own file plus every chunk it imports
-    const outputs = { ...browser.metafile.outputs, ...server.metafile.outputs };
+    const outputs = { ...browser.metafile.outputs };
     const size = file => { const b = readFileSync(join(SDK, file)); return [b.length, gzipSync(b).length]; };
     console.log('\n  entry               own file           with its chunks (gzip)');
     for (const [file, out] of Object.entries(outputs)) {
