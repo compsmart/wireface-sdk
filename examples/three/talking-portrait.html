@@ -10,6 +10,7 @@
   "@wireface/sdk": "../../dist/wireface.js",
   "@wireface/sdk/2d": "../../dist/2d.js",
   "@wireface/sdk/2d/live": "../../dist/2d-live.js",
+  "@wireface/sdk/create": "../../dist/create.js",
   "@wireface/sdk/three": "../../dist/three.js",
   "@wireface/sdk/three/characters": "../../dist/three-characters.js",
   "@wireface/sdk/three/kit": "../../dist/three-kit.js"
@@ -37,11 +38,11 @@ await screen.useCharacter('hazel', { transition: 0.9 });</pre>
 <script type="module">
   import * as THREE from 'three';
   import { FaceScreen, screenGeometry, unlockAudio } from '@wireface/sdk/three';
+  import { stage } from './stage.js';
   const lines = new URL('voices/', import.meta.url).href;   // this page's own lines (examples/voices/lines.json)
   // each picture's own line (portrait-<id>), and the feeling it's said with
   const MOODS = { ava: 'amused', pip: 'excited', sora: 'happy', mabel: 'amused', rex: 'excited', eleanor: 'amused',
     hazel: 'happy', theo: 'sad', kit: 'excited', gus: 'amused', vee: 'calm', fern: 'calm', bolt: 'calm' };
-  import { stage } from './stage.js';
 
   const { scene, camera } = stage({ camera: [0.6, 1.5, 1.7], target: [0, 1.5, 0], background: '#1a1410' });
 

@@ -1,8 +1,8 @@
 {
   "name": "@wireface/sdk",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "license": "SEE LICENSE IN LICENSE.md",
-  "description": "Free offline face animation and local photo mapping, with optional hosted 2D/3D rigging.",
+  "description": "Free offline face animation and local character creation from photos, with hosted AI detection for drawn and stylised faces.",
   "homepage": "https://wireface.dev",
   "repository": {
     "type": "git",
@@ -53,7 +53,15 @@
       "types": "./types/rigging.d.ts",
       "default": "./dist/rigging.js"
     },
-    "./character.schema.json": "./schemas/character.schema.json"
+    "./create": {
+      "types": "./types/create.d.ts",
+      "default": "./dist/create.js"
+    },
+    "./character.schema.json": "./schemas/character.schema.json",
+    "./images": {
+      "types": "./types/images.d.ts",
+      "default": "./dist/images.js"
+    }
   },
   "files": [
     "dist",
@@ -78,12 +86,7 @@
     }
   },
   "scripts": {
-    "start": "node tools/serve.mjs",
-    "test": "node --test test/*.test.js",
-    "build": "node tools/build.mjs",
-    "check": "node tools/check.mjs",
-    "pack:release": "node tools/package-release.mjs",
-    "check:engine": "node tools/verify-engine.mjs"
+    "start": "node examples/hosted/backend.mjs"
   },
   "engines": {
     "node": ">=18"

@@ -1,5 +1,17 @@
 # Changelog
 
+## 0.3.0 (2026-10-11)
+
+- Local character creation in `@wireface/sdk/create`: photo detection, mesh fitting, rig construction and 2D transfer preparation work offline with bundled MediaPipe assets.
+- Silent image animation through `@wireface/sdk/images` and the one-tag image loader, with scrolling, visibility and cross-origin examples.
+- Matching canvas, 2D and three.js playback, portable character files, TypeScript declarations and runnable examples.
+- Optional hosted detection remains available for pictures the local detector cannot read. Provider credentials stay on the server.
+
+## 0.2.0 (2026-10-11)
+
+- Free local fixed-mesh photo mapping and animation, portable baked characters and an optional hosted rigging client.
+- Authenticated compiled downloads, account-bound commercial entitlements and separate SDK source downloads.
+
 ## 0.1.0 (2026-10-08)
 
 The first release of the Wireface SDK: the 3D face, Wireface 2D and Wireface for three.js in one package.

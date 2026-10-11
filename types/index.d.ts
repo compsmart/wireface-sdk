@@ -352,3 +352,6 @@ export declare const ASSETS: string;
 export declare function createFace(canvas: HTMLCanvasElement, options?: FaceOptions): Wireface;
 
 export { exportCharacter } from './character.js';
+
+export { animateImages, IMAGE_DEFAULTS } from './images.js';
+export type { ImageMood, ImageLandmarks, ImageAnimationOptions, ImageAnimationStatus, ImageAnimator } from './images.js';

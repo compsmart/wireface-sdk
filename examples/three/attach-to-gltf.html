@@ -1,0 +1,168 @@
+<!doctype html>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Wireface three.js: a robot's own face</title>
+<link rel="stylesheet" href="example.css">
+<style>
+  main { position: relative; min-height: 320px; }
+  .cta { position: absolute; left: 50%; bottom: 7%; transform: translateX(-50%); width: min(420px, calc(100% - 32px));
+    display: grid; gap: 10px; justify-items: center; text-align: center; padding: 18px 20px; border-radius: 16px;
+    background: rgba(7, 10, 20, .78); border: 1px solid var(--line); backdrop-filter: blur(6px); transition: opacity .6s, transform .6s; }
+  .cta.gone { opacity: 0; transform: translate(-50%, 16px); pointer-events: none; }
+  .cta button { font-size: 18px; font-weight: 600; padding: 12px 26px; border-radius: 12px; color: #04121a;
+    background: var(--accent); border-color: var(--accent); box-shadow: 0 0 28px rgba(34, 211, 238, .45); }
+  .cta button:hover { filter: brightness(1.08); }
+  .cta button:disabled { background: #121c3d; color: var(--muted); box-shadow: none; }
+  .cta p { font-size: 13px; }
+</style>
+<script type="importmap">
+{ "imports": {
+  "three": "../../node_modules/three/build/three.module.js",
+  "three/addons/": "../../node_modules/three/examples/jsm/",
+  "@wireface/sdk": "../../dist/wireface.js",
+  "@wireface/sdk/2d": "../../dist/2d.js",
+  "@wireface/sdk/2d/live": "../../dist/2d-live.js",
+  "@wireface/sdk/create": "../../dist/create.js",
+  "@wireface/sdk/three": "../../dist/three.js",
+  "@wireface/sdk/three/characters": "../../dist/three-characters.js",
+  "@wireface/sdk/three/kit": "../../dist/three-kit.js"
+} }
+</script>
+<main>
+  <canvas></canvas>
+  <div class="cta" id="cta">
+    <button id="find" disabled>Give it a face</button>
+    <p id="found">Gemini Pro finds its eyes and where a mouth should go, and rigs them to blink and talk.</p>
+  </div>
+</main>
+<aside>
+  <a class="back" href="./">&larr; examples</a>
+  <h1>A robot's own face</h1>
+  <p>A rigged model from a file: two eyes, no mouth, nothing that moves them. Gemini Pro looked at a picture of its head
+    and said where its eyes are, that it has no mouth (and where one should go) and no nose. <code>ModelFace</code> rigs
+    that: lids that blink over its own eyes, a glint in each that follows you, and a mouth laid on its head that
+    lip-syncs. Gemini's answer is saved with the model (<code>RobotFace.features.json</code>); with the source and a
+    Gemini key on the dev server, Gemini looks again, live.</p>
+  <h2>Animation</h2>
+  <div class="row" id="anims"></div>
+  <h2>Its face</h2>
+  <div class="row" id="moods"></div>
+  <div class="row"><button id="talk" disabled>Talk</button></div>
+  <div class="caption" id="caption"></div>
+  <p>The model's animations play underneath, and the face's nods and turns are added on top of them, so it can wave,
+    dance and talk at once. Model: RobotExpressive by Tom&aacute;s Laulh&eacute; (CC0), from the three.js examples,
+    given room for a face: a taller head, with smaller eyes and brows set inside it (<code>tools/robot-face.mjs</code>).</p>
+  <pre>const robot = (await new GLTFLoader().loadAsync(url)).scene;
+const features = await (await fetch(
+  'models/RobotFace.features.json')).json();
+const face = new ModelFace({ ...features,
+  head: findBone(robot, /^head$/i) });  // lids, glints, a mouth
+face.gazeAt(camera);
+await face.say(clip, { audioContext });</pre>
+</aside>
+<script type="module">
+  import * as THREE from 'three';
+  import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+  import * as wireface from '@wireface/sdk/three';
+  import { stage } from './stage.js';
+  const lines = new URL('voices/', import.meta.url).href;   // this page's own lines (examples/voices/lines.json)
+
+  const { ModelFace, findBone, unlockAudio } = wireface;
+  const findFeatures = wireface.findFeatures;     // (a build without face finding, such as the SDK's, has none)
+  const { scene, camera, renderer, onFrame } = stage({ camera: [0.6, 1.55, 3.9], target: [0, 1.0, 0], width: 1.4 });
+  const $ = s => document.querySelector(s);
+
+  const gltf = await new GLTFLoader().loadAsync('models/RobotFace.glb');   // RobotExpressive, with room for a mouth
+  const robot = gltf.scene;
+  robot.scale.setScalar(0.4);                     // it's modelled 4.8 m tall
+  robot.traverse(o => { if (o.isMesh) o.castShadow = o.receiveShadow = true; });
+  scene.add(robot);
+  const head = findBone(robot, /^head$/i);
+  let face = null;                                // until it's given one
+
+  // The model's animations, through an AnimationMixer as usual
+  const mixer = new THREE.AnimationMixer(robot);
+  const actions = Object.fromEntries(gltf.animations.map(clip => [clip.name, mixer.clipAction(clip)]));
+  let current = actions.Idle, still = false;      // still: held in one pose while its face is found
+  current.play();
+  const animButtons = ['Idle', 'Wave', 'Dance', 'Yes', 'No', 'ThumbsUp', 'Walking'].map(name => {
+    const b = document.createElement('button');
+    b.textContent = name;
+    b.onclick = () => {
+      const next = actions[name];
+      if (next === current || still) return;
+      next.reset().fadeIn(0.3).play();
+      current.fadeOut(0.3);
+      current = next;
+      face?.express(name === 'No' ? 'frustrated' : name === 'Dance' ? 'excited' : 'happy', 3);
+    };
+    $('#anims').append(b);
+    return b;
+  });
+  onFrame(dt => { if (!still) mixer.update(dt); });  // the mixer first; the face adds its motion as it renders
+
+  // Hold it still, standing and facing the front, so its face is photographed straight on and stays where it was found
+  // while Gemini looks (an animation would turn its head away meanwhile); then back to what it was doing
+  const holdStill = on => {
+    still = on;
+    animButtons.forEach(b => { b.disabled = on; });
+    mixer.stopAllAction();
+    const pose = on ? actions.Standing : current;
+    pose.reset().play();
+    mixer.update(0);
+  };
+
+  const moods = ['happy', 'surprised', 'sad', 'curious', 'asleep'].map(mood => {
+    const b = document.createElement('button');
+    b.textContent = mood;
+    b.disabled = true;
+    b.onclick = () => (mood === 'asleep' ? face.state(face.driver.status.state === 'stopped' ? 'idle' : 'asleep') : face.express(mood, 3));
+    $('#moods').append(b);
+    return b;
+  });
+
+  const caption = $('#caption');
+  const say = async audioContext => {
+    const clip = await face.clip('robot-mouth', lines);
+    face.express('amused', clip.duration);
+    await face.say(clip, { audioContext, onCaption: t => (caption.textContent = t) });
+  };
+  $('#talk').onclick = () => say(unlockAudio());      // on the click itself, before anything is awaited
+
+  // Give it a face: Gemini Pro finds its eyes and where a mouth should go, and ModelFace rigs them on the robot's head.
+  // Live, through the dev server (which holds the key); or, without one, what Gemini found when it looked before
+  // (models/RobotFace.features.json: findFeatures' result, saved)
+  const find = $('#find'), found = $('#found');
+  let live = false;
+  find.disabled = false;
+  found.textContent = 'Gemini Pro found its eyes and where a mouth should go: ModelFace rigs them to blink and talk.';
+  fetch('/api/status').then(r => r.json()).then(s => {
+    live = !!(s.gemini && findFeatures);
+    if (live) found.textContent = 'Gemini Pro finds its eyes and where a mouth should go, and rigs them to blink and talk.';
+  }).catch(() => {});
+  find.onclick = async () => {
+    const audioContext = unlockAudio();             // the click lets it speak as soon as it has a mouth
+    find.disabled = true;
+    find.textContent = live ? 'Looking at its face...' : 'Giving it a face...';
+    if (live) found.textContent = 'Gemini Pro is finding its eyes, its mouth and its nose.';
+    if (live) holdStill(true);
+    try {
+      const features = live ? await findFeatures(robot, { renderer, head })
+        : { ...(await (await fetch('models/RobotFace.features.json')).json()), head };
+      face = new ModelFace(features);
+      if (live) { current = actions.Idle; holdStill(false); }
+      face.gazeAt(camera);
+      $('#cta').classList.add('gone');
+      $('#talk').disabled = false;
+      moods.forEach(b => { b.disabled = false; });
+      caption.textContent = `${features.eyes.length} eyes with lids; a mouth ${features.mouth.present ? 'of its own' : 'where it had none'}; ` +
+        (features.nose ? 'a nose, found and left as it is.' : 'no nose, so none.');
+      setTimeout(() => say(audioContext), 900);     // and it says hello with it
+    } catch (e) {
+      if (live) holdStill(false);
+      find.disabled = false;
+      find.textContent = 'Try again';
+      found.textContent = e.message;
+    }
+  };
+</script>

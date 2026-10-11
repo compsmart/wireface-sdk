@@ -69,7 +69,13 @@ export interface CharacterLine {
   engine?: ScreenEngine;
   id: string;
   cues?: readonly (readonly [number, string])[];
+  /** A custom voice folder, used instead of the engine's default. */
+  folder?: string;
 }
+/** A recorded cast line from the bundled voice folder. */
+export declare function castLine(id: string, cues?: CharacterLine['cues']): CharacterLine & { folder: string };
+/** URL of a bundled, prepared character face. */
+export declare function faceFile(name: string): string;
 /** What a Character is made from. */
 export interface CharacterDef {
   id: string;

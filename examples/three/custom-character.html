@@ -10,6 +10,7 @@
   "@wireface/sdk": "../../dist/wireface.js",
   "@wireface/sdk/2d": "../../dist/2d.js",
   "@wireface/sdk/2d/live": "../../dist/2d-live.js",
+  "@wireface/sdk/create": "../../dist/create.js",
   "@wireface/sdk/three": "../../dist/three.js",
   "@wireface/sdk/three/characters": "../../dist/three-characters.js",
   "@wireface/sdk/three/kit": "../../dist/three-kit.js"
@@ -35,8 +36,8 @@ body.material = face.skinMaterial();   // the face's own colour</pre>
 <script type="module">
   import * as THREE from 'three';
   import { FaceMesh, attachFace, defineExpression, unlockAudio } from '@wireface/sdk/three';
-  const lines = new URL('voices/', import.meta.url).href;   // this page's own lines (examples/voices/lines.json)
   import { stage } from './stage.js';
+  const lines = new URL('voices/', import.meta.url).href;   // this page's own lines (examples/voices/lines.json)
 
   const { scene, camera, onFrame } = stage({ camera: [0.5, 1.25, 3.3], target: [0, 0.8, 0], width: 1.2, background: '#0d1526' });
 

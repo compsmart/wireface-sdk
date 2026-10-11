@@ -2,13 +2,40 @@
 
 Use `FaceMesh` for geometry or `FaceScreen` for a live texture. The monster has sharp teeth and Dracula has fangs; the robot has normal teeth.
 
-# Wireface: free offline SDK, optional hosted rigging
+A face drawn on an object plays back from a baked character file: `new FaceScreen({ engine: '2d', character: 'face.wireface.json' })`, wrapped round the object with `wrapGeometry` and painted on its own material with `screen.paintOn(material)`. A model's own face plays back from saved features: `new ModelFace({ ...features, head })` gives its eyes lids that blink and a mouth that lip-syncs.
 
-The SDK maps photos onto its fixed mesh and animates faces locally, including commercial use. Expressions, rendering and audio-driven lip-sync are free. Canvas, 2D and three.js integrations live in one `@wireface/sdk` package.
+# Wireface: free offline SDK, hosted AI detection
 
-Sign in at https://wireface.dev/account/ for the compiled SDK download and a free hosted rigging key. Install the downloaded archive with `npm install ./wireface-sdk-0.2.0.tgz`. In the SDK repository, run `npm install` and `npm start`, then open `http://localhost:5173`. Working-tree builds are previews until matching artifacts are released.
+The SDK rigs photos into characters and animates them on the device, including for commercial use. Character creation, expressions, rendering and audio-driven lip-sync are free and need no account, key or network. Only drawn and stylised faces, which need AI to find, go to the hosted service. Canvas, 2D and three.js integrations live in one `@wireface/sdk` package.
 
-## Local photo mapping
+Sign in at https://wireface.dev/account/#sdk for the compiled SDK download and a free hosted rigging key. Install the downloaded archive with `npm install ./wireface-sdk-0.3.0.tgz`. In the SDK repository, run `npm install` and `npm start`, then open `http://localhost:5173`.
+
+## Create characters on the device
+
+```js
+import { createFace, exportCharacter } from '@wireface/sdk';
+import { createFace2d } from '@wireface/sdk/2d';
+import { createCharacter } from '@wireface/sdk/create';
+const portrait = await createCharacter(photoFile);              // 3D: the mesh is fitted to the face
+await createFace(canvas).useCharacter(portrait);
+const picture = await createCharacter(photoFile, { kind: '2d' }); // 2D: the picture itself moves
+await createFace2d(otherCanvas).useCharacter(picture);
+const saved = await exportCharacter(portrait);                   // save as portrait.wireface.json
+```
+
+MediaPipe finds the face's 468 landmarks in the browser. For 3D, the SDK fits the mesh's shape to them (jaw, face widths and heights, eyes, brows, nose, mouth) and builds the expression rig on the fitted shape. For 2D, it prepares the picture so the rig's movements carry onto it, sealing the lips and pinning the outline. No image is uploaded. The result is the same portable character the hosted service returns, and it plays in `createFace`, `createFace2d` and three.js's `FaceMesh`. Pass `landmarks` to skip detection, or `mediapipe` to load MediaPipe from your own paths (see below).
+
+MediaPipe reads photos, and realistic paintings and 3D renders of faces. It can't find most drawn, anime, pixel-art or creature faces. Those need Gemini's detection, which runs only on wireface.dev with your key. Pass a rigging client and `createCharacter` sends a 2D picture there when MediaPipe finds no face:
+
+```js
+import { createRiggingClient } from '@wireface/sdk/rigging';
+const rigging = createRiggingClient({ getToken });               // see the hosted section
+const character = await createCharacter(drawingFile, { kind: '2d', rigging });
+```
+
+`detector: 'local'` never leaves the device; `detector: 'hosted'` always uses the service, for a drawing MediaPipe might only half recognise. Without a client, a picture with no detectable face throws a `WirefaceError` with the code `face_not_found`. A 3D character always needs a clear, front-facing face MediaPipe can read.
+
+## Fixed-mesh photo mapping
 
 ```js
 import { createFace, skinFromPhoto } from '@wireface/sdk';
@@ -17,9 +44,11 @@ await face.useSkin(await skinFromPhoto(photoFile));
 face.express('happy');
 ```
 
-This detects landmarks on the device and maps the photo onto a baked, fixed mesh. It does not change facial geometry. No image is uploaded and no account or key is needed once installed. MediaPipe JavaScript, CPU WASM and the detection model are bundled in `assets/mediapipe`; no CDN is needed. Serve the package's `dist/` and `assets/` folders together over local HTTP. With a bundler, copy `assets/` into your public directory, pass `{ assets: '/wireface-assets/' }` to the renderer and call `skinFromPhoto(file, { bundle: '/wireface-assets/mediapipe/vision_bundle.mjs', wasm: '/wireface-assets/mediapipe/wasm', model: '/wireface-assets/mediapipe/face_landmarker.task' })`. Serve `.wasm` as `application/wasm`. The first installation requires downloading the package; thereafter mapping and playback work with external networking blocked.
+This detects landmarks on the device and maps the photo onto a baked, fixed mesh. It does not change facial geometry; `createCharacter` does. No image is uploaded and no account or key is needed once installed. MediaPipe JavaScript, CPU WASM and the detection model are bundled in `assets/mediapipe`; no CDN is needed. Serve the package's `dist/` and `assets/` folders together over local HTTP. With a bundler, copy `assets/` into your public directory, pass `{ assets: '/wireface-assets/' }` to the renderer and call `skinFromPhoto(file, { bundle: '/wireface-assets/mediapipe/vision_bundle.mjs', wasm: '/wireface-assets/mediapipe/wasm', model: '/wireface-assets/mediapipe/face_landmarker.task' })`. Serve `.wasm` as `application/wasm`. The first installation requires downloading the package; thereafter creation, mapping and playback work with external networking blocked. `createCharacter(file, { mediapipe: { ... } })` takes the same paths.
 
-## Hosted 2D and 3D creation
+## Hosted AI detection
+
+The hosted service is for faces that need AI to find. It runs Gemini's detection on wireface.dev, then the same fitting the SDK does locally. `createCharacter` calls it for you when you pass a client, as above, or call it directly:
 
 ```js
 import { createRiggingClient } from '@wireface/sdk/rigging';
@@ -50,7 +79,7 @@ const { token, expiresAt } = await rigging.createToken({
 });
 ```
 
-`rig2d` and `rig3d` accept a File, Blob or image URL. URL images are fetched by the SDK and uploaded as bytes; the service does not fetch arbitrary URLs. Use JPEG, PNG or still WebP, at most 12 MB and 40 megapixels, with one clear face. 3D needs a front-facing portrait with visible facial detail. 2D supports drawings and stylised characters. Unusable images are rejected; no manual or canonical fallback silently replaces your character.
+`rig2d` and `rig3d` accept a File, Blob or image URL. URL images are fetched by the SDK and uploaded as bytes; the service does not fetch arbitrary URLs. Use JPEG, PNG or still WebP, at most 12 MB and 40 megapixels, with one clear face. 3D needs a front-facing portrait with visible facial detail; `createCharacter` makes the same 3D character on the device. 2D supports drawings and stylised characters. Unusable images are rejected; no manual or canonical fallback silently replaces your character.
 
 ```js
 const abort = new AbortController();
@@ -76,16 +105,22 @@ await face.useCharacter(restored);
 
 The versioned JSON contains an embedded raster texture, baked mesh and expression channels, jaw, eyes, mouth, render metadata and prepared 2D transfer data. It contains no credentials, expiring asset URLs or executable code. Loading validates and copies it before renderer replacement. File-based loading never invokes fitting or contacts Wireface. Fetching a character URL uses the network only to obtain that file. Legacy `.wface` version-1 documents remain loadable.
 
-Feed any TTS provider's audio into `face.listenTo(audioContext, source)` or the existing clip/stream interfaces. Lip-sync analysis and animation run locally. Cloud TTS has its own connectivity, account and charges. The optional Gemini Live conversation examples use a separate `GEMINI_API_KEY` in the backend environment; `GEMINI_LIVE_MODEL` can select a supported live model. `examples/playback/` demonstrates exported-character playback and local audio; `examples/3d/photo.html` demonstrates offline mapping; `examples/hosted/` demonstrates remote 2D and three.js, cancellation, expressions, export, reload and audio. `node examples/hosted/build-character.mjs photo.jpg character.wireface.json 3d` builds a saved character from Node.
+Feed any TTS provider's audio into `face.listenTo(audioContext, source)` or the existing clip/stream interfaces. Lip-sync analysis and animation run locally. Cloud TTS has its own connectivity, account and charges. The optional Gemini Live conversation examples use a separate `GEMINI_API_KEY` in the backend environment; `GEMINI_LIVE_MODEL` can select a supported live model. `examples/create/` creates 3D and 2D characters on the device; `examples/playback/` demonstrates exported-character playback and local audio; `examples/3d/photo.html` demonstrates offline mapping; `examples/hosted/` demonstrates remote 2D and three.js, cancellation, expressions, export, reload and audio. `node examples/hosted/build-character.mjs photo.jpg character.wireface.json 3d` builds a saved character from Node.
 
 ## Commercial hosted characters and source
 
-Noncommercial hosted creation/use is free after sign-in. Commercial use of hosted-rigged characters costs £25/year for developers and organisations with fewer than 10 employees, covering one named product. Larger organisations and multiple commercial products require Enterprise terms. Renewal is manual. An active licence permits existing account characters in the licensed product without re-rigging. End users need no account. Ongoing commercial use needs an active licence, but saved characters never stop working or contact a licence server.
+Characters created on the device with `createCharacter` are free for any use, including commercial, under the SDK Licence. Noncommercial hosted creation/use is free after sign-in. Commercial use of hosted-rigged characters costs Â£25/year for developers and organisations with fewer than 10 employees, covering one named product. Larger organisations and multiple commercial products require Enterprise terms. Renewal is manual. An active licence permits existing account characters in the licensed product without re-rigging. End users need no account. Ongoing commercial use needs an active licence, but saved characters never stop working or contact a licence server.
 
-The commercial licence includes full SDK and integration source, with updates during the term. Hosted detection orchestration, morphing, fitting and rig construction stay private and are excluded. Local fixed-frame mapping and SDK animation remain free for commercial use regardless of this entitlement. Historical licences and third-party notices are preserved. Desktop and Chat have separate free offerings and licences.
+The commercial licence includes full SDK and integration source, with updates during the term, including local creation (shape fitting, rig construction and 2D preparation). The hosted AI detection service stays private and is excluded. Local creation, fixed-frame mapping and SDK animation remain free for commercial use regardless of this entitlement. Historical licences and third-party notices are preserved. Desktop and Chat have separate free offerings and licences.
 
 ## API contracts
 
 The package includes `openapi.json` (OpenAPI 3.1), request/response schemas under `schemas/`, and TypeScript declarations for every entry. The optional rigging entry has no effect on playback dependencies. HTTP endpoints are `POST /api/rigging/v1/2d`, `POST /api/rigging/v1/3d`, `GET /api/rigging/v1/jobs/{id}`, `DELETE /api/rigging/v1/jobs/{id}`, and `POST /api/rigging/v1/tokens`.
 
-Private creation uses structured Gemini observations, independent anatomical checks, dense server-side MediaPipe for 3D portraits, and Wireface's existing fitter. Gemini does not generate rigging code. See [Gemini structured output](https://ai.google.dev/gemini-api/docs/structured-output) and [MediaPipe Python](https://developers.google.com/edge/mediapipe/solutions/vision/face_landmarker/python).
+Hosted creation uses structured Gemini observations, independent anatomical checks, dense server-side MediaPipe for 3D portraits, and the same fitter `@wireface/sdk/create` runs locally. Gemini does not generate rigging code. See [Gemini structured output](https://ai.google.dev/gemini-api/docs/structured-output) and [MediaPipe Python](https://developers.google.com/edge/mediapipe/solutions/vision/face_landmarker/python).
+
+## Animate images already on a page
+
+Use `animateImages()` from `@wireface/sdk/images` (also exported from the main SDK) to discover and animate all images, or pass `{ selector: ".portraits" }` to select images or containers. Silent expressions, blinks, pointer tracking and idle eye movements are free for commercial use with no account, key or upload. Dynamic images and carousel visibility are handled automatically. A one-tag browser script is also available.
+
+[Live gallery and carousel](https://wireface.dev/images/) | [Full configuration and lifecycle reference](https://wireface.dev/docs/images/) | [Downloadable examples](https://github.com/wireface/wireface-images)

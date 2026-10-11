@@ -10,6 +10,7 @@
   "@wireface/sdk": "../../dist/wireface.js",
   "@wireface/sdk/2d": "../../dist/2d.js",
   "@wireface/sdk/2d/live": "../../dist/2d-live.js",
+  "@wireface/sdk/create": "../../dist/create.js",
   "@wireface/sdk/three": "../../dist/three.js",
   "@wireface/sdk/three/characters": "../../dist/three-characters.js",
   "@wireface/sdk/three/kit": "../../dist/three-kit.js"
@@ -40,8 +41,8 @@ screen.gazeAt(camera);</pre>
   import * as THREE from 'three';
   import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.js';
   import { FaceScreen, PRESETS, screenGeometry, unlockAudio } from '@wireface/sdk/three';
-  const lines = new URL('voices/', import.meta.url).href;   // this page's own lines (examples/voices/lines.json)
   import { stage } from './stage.js';
+  const lines = new URL('voices/', import.meta.url).href;   // this page's own lines (examples/voices/lines.json)
 
   const { scene, camera, onFrame } = stage({ camera: [0.5, 1.15, 1.9], target: [0, 1.02, 0], width: 0.9 });
 

@@ -1,0 +1,26 @@
+<!doctype html>
+<html lang="en">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Wireface SDK: create a character</title>
+<link rel="stylesheet" href="../playback/playback.css">
+<script type="module" src="create.js"></script>
+<main>
+  <p class="eyebrow">On the device · no key, no upload</p>
+  <h1>A photo, rigged locally.</h1>
+  <p>MediaPipe finds the face in your browser, then the SDK fits the mesh (3D) or prepares the picture to move (2D).
+    Nothing leaves this page. Drawn and stylised faces MediaPipe can't read need AI detection: see the
+    <a href="../hosted/">hosted example</a>.</p>
+  <canvas aria-label="Animated character"></canvas>
+  <div class="controls">
+    <label>Photo <input id="photo" type="file" accept="image/jpeg,image/png,image/webp"></label>
+    <label>Kind <select id="kind"><option value="3d">3D (fitted mesh)</option><option value="2d">2D (picture in place)</option></select></label>
+    <label>Expression <select id="expression"><option>neutral</option><option>happy</option><option>surprised</option><option>sad</option><option>curious</option></select></label>
+    <button id="save" type="button" disabled>Save .wireface.json</button>
+  </div>
+  <p id="status" role="status" aria-live="polite">Choose a photo of a face.</p>
+  <pre><code>import { createCharacter } from '@wireface/sdk/create';
+const character = await createCharacter(photo, { kind: '3d' });   // or '2d'
+await face.useCharacter(character);</code></pre>
+</main>
+</html>

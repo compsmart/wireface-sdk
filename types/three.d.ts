@@ -203,6 +203,24 @@ export declare class FaceMesh extends Group {
 /** A FaceMesh. */
 export declare function createFaceMesh(options?: FaceMeshOptions): FaceMesh;
 
+/** Prepared feature coordinates in the model head's local space. */
+export interface ModelFaceFeatures {
+  head: Object3D;
+  across: [number, number, number];
+  up: [number, number, number];
+  face: { at: [number, number, number]; rotation: [number, number, number]; size: number };
+  eyes: { center: [number, number, number]; normal: [number, number, number];
+    width: number; height: number; depth: number; side: 'left' | 'right'; lid?: string }[];
+  mouth: { center: [number, number, number]; normal: [number, number, number];
+    width: number; height: number; lip?: string; inside?: string };
+}
+/** Animate a model's own face using previously prepared features. */
+export declare class ModelFace extends FaceMesh {
+  constructor(features: ModelFaceFeatures, options?: FaceMeshOptions & { glints?: boolean; lid?: string; lip?: string; inside?: string });
+  readonly features: ModelFaceFeatures;
+  readonly parts: Group;
+}
+
 // --- FaceScreen ----------------------------------------------------------------------------------------------------
 
 /** Which face a FaceScreen shows: core's renderer ('3d') or Wireface 2D ('2d'). */
